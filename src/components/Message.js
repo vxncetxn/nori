@@ -10,6 +10,8 @@ const Message = styled.View`
     props.highlight ? Constants.colorBgLighter : Constants.colorBgLighter};
   padding: 10px;
   margin-top: 20px;
+  border-radius: 8px;
+  overflow: hidden;
 `;
 
 const MessageBadgeRow = styled.ScrollView`
@@ -50,13 +52,13 @@ const MessageDate = styled.Text`
   color: white;
   font-size: 14px;
   font-family: "${Constants.fontSecondary}";
-  margin-bottom: 10px;
 `;
 
 const MessageAction = styled.Text`
   font-size: 14px;
   font-family: "${Constants.fontSecondary}";
   color: ${Constants.colorAccent};
+  margin-top: 10px;
 `;
 
 const MessageComp = ({

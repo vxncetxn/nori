@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import * as Font from "expo-font";
+import styled from "styled-components";
 
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
@@ -13,6 +14,22 @@ import ChatScreen from "./src/screens/ChatScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
 
 import { SimpleLineIcons } from "@expo/vector-icons";
+
+const IconWrapper = styled.View``;
+
+const PendingBubble = styled.Text`
+  position: absolute;
+  top: -5px;
+  right: -8px;
+  padding: 1px 3px;
+  border: 1px solid ${Constants.colorAccent};
+  border-radius: 5px;
+  overflow: hidden;
+  font-family: "${Constants.fontSecondary}";
+  font-size: 10px;
+  color: ${Constants.colorAccent};
+  background-color: ${Constants.colorBgLight};
+`;
 
 export default function App() {
   const [fontLoaded, setFontLoaded] = useState(false);
@@ -30,6 +47,14 @@ export default function App() {
   }, []);
 
   const Tab = createBottomTabNavigator();
+
+  const pending = {
+    Messages: 4,
+    Progress: 0,
+    Happenings: 17,
+    Chat: 0,
+    Settings: 0
+  };
 
   return (
     // <Container>
@@ -103,7 +128,16 @@ export default function App() {
                   }
 
                   return (
-                    <SimpleLineIcons name={iconName} size={20} color={color} />
+                    <IconWrapper>
+                      <SimpleLineIcons
+                        name={iconName}
+                        size={20}
+                        color={color}
+                      />
+                      {pending[route.name] ? (
+                        <PendingBubble>{pending[route.name]}</PendingBubble>
+                      ) : null}
+                    </IconWrapper>
                   );
                 }
               })}

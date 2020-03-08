@@ -24,7 +24,7 @@ const Hero = styled.View`
 `;
 
 const HeroContent = styled.View`
-  width: 55%;
+  width: 60%;
 `;
 
 const HeroImage = styled.Image`
@@ -119,10 +119,10 @@ const HappeningsScreen = () => {
             </SearchBarWrapper>
             <ButtonsRow>
               <Button>
-                <ButtonLabel>Filters</ButtonLabel>
+                <ButtonLabel>Organise</ButtonLabel>
               </Button>
               <Button style={{ marginLeft: 10 }}>
-                <ButtonLabel>Add</ButtonLabel>
+                <ButtonLabel>Publish</ButtonLabel>
               </Button>
             </ButtonsRow>
           </Tools>

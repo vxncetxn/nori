@@ -1,13 +1,20 @@
-import React from "react";
+import React, { useRef } from "react";
 import styled from "styled-components";
 import { Dimensions } from "react-native";
+import BottomSheet from "reanimated-bottom-sheet";
+import Animated from "react-native-reanimated";
+import { TouchableWithoutFeedback, View } from "react-native";
+import { SimpleLineIcons } from "@expo/vector-icons";
 
 import Constants from "../Constants";
 
 import MasonryGrid from "../components/MasonryGrid";
 import Message from "../components/Message";
 
-import { SimpleLineIcons } from "@expo/vector-icons";
+const ScreenWrapper = styled.View`
+  flex: 1;
+  background-color: #000000;
+`;
 
 const Messages = styled.ScrollView`
   background-color: ${Constants.colorBg};
@@ -24,7 +31,7 @@ const Hero = styled.View`
 `;
 
 const HeroContent = styled.View`
-  width: 55%;
+  width: 60%;
 `;
 
 const HeroImage = styled.Image`
@@ -82,6 +89,27 @@ const ButtonLabel = styled.Text`
   color: white;
 `;
 
+const BsContent = styled.View`
+  background-color: ${Constants.colorBgLight};
+  justify-content: space-between;
+  height: ${Dimensions.get("window").height * 0.6}px;
+  padding: 40px 20px;
+`;
+
+const BsContentSectionTitle = styled.Text`
+  color: white;
+  font-size: 16px;
+  font-family: "${Constants.fontPrimary}";
+`;
+
+const Overlay = styled(Animated.View)`
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+`;
+
 const data = [
   {
     createdDate: new Date(),
@@ -129,44 +157,78 @@ const data = [
 ];
 
 const MessagesScreen = () => {
+  const bsRef = useRef();
+  const bsAnimNode = new Animated.Value(1);
+
   return (
-    <Messages showsVerticalScrollIndicator={false}>
-      <Hero>
-        <HeroImage source={require("../../assets/images/messages-hero.png")} />
-        <HeroContent>
-          <HeroTitle>Messages</HeroTitle>
-          <Tools>
-            <SearchBarWrapper>
-              <SearchBar placeholder="Search" placeholderTextColor="#bfbfbf" />
-              <SearchBarIcon name="magnifier" size={15} color={"grey"} />
-            </SearchBarWrapper>
-            <ButtonsRow>
-              <Button>
-                <ButtonLabel>Filters</ButtonLabel>
-              </Button>
-              <Button style={{ marginLeft: 10 }}>
-                <ButtonLabel>Add</ButtonLabel>
-              </Button>
-            </ButtonsRow>
-          </Tools>
-        </HeroContent>
-      </Hero>
-      <MasonryGrid
-        style={{ paddingRight: 20, paddingBottom: 20, paddingLeft: 20 }}
-        cols={2}
-        gap={20}
-        data={data}
-        renderItem={({ item }) => (
-          <Message
-            title={item.title}
-            type={item.type}
-            acknowledgementRequired={item.acknowledgementRequired}
-            consentRequired={item.consentRequired}
+    <ScreenWrapper>
+      <Overlay
+        style={{
+          opacity: Animated.interpolate(bsAnimNode, {
+            inputRange: [0, 1],
+            outputRange: [0.2, 1],
+            extrapolate: Animated.Extrapolate.CLAMP
+          })
+        }}
+        onPress={() => bsRef.current.snapTo(1)}
+      >
+        <Messages showsVerticalScrollIndicator={false}>
+          <Hero>
+            <HeroImage
+              source={require("../../assets/images/messages-hero.png")}
+            />
+            <HeroContent>
+              <HeroTitle>Messages</HeroTitle>
+              <Tools>
+                <SearchBarWrapper>
+                  <SearchBar
+                    placeholder="Search"
+                    placeholderTextColor="#bfbfbf"
+                  />
+                  <SearchBarIcon name="magnifier" size={15} color={"grey"} />
+                </SearchBarWrapper>
+                <ButtonsRow>
+                  <Button onPress={() => bsRef.current.snapTo(0)}>
+                    <ButtonLabel>Organise</ButtonLabel>
+                  </Button>
+                  <Button style={{ marginLeft: 10 }}>
+                    <ButtonLabel>Publish</ButtonLabel>
+                  </Button>
+                </ButtonsRow>
+              </Tools>
+            </HeroContent>
+          </Hero>
+          <MasonryGrid
+            style={{ paddingRight: 20, paddingBottom: 20, paddingLeft: 20 }}
+            cols={2}
+            gap={20}
+            data={data}
+            renderItem={({ item }) => (
+              <Message
+                title={item.title}
+                type={item.type}
+                acknowledgementRequired={item.acknowledgementRequired}
+                consentRequired={item.consentRequired}
+              />
+            )}
+            keyExtractor={item => item.title}
           />
+        </Messages>
+      </Overlay>
+      <BottomSheet
+        ref={bsRef}
+        snapPoints={["60%", "0%"]}
+        initialSnap={1}
+        renderContent={() => (
+          <BsContent>
+            <BsContentSectionTitle>Filters</BsContentSectionTitle>
+            <BsContentSectionTitle>Sort</BsContentSectionTitle>
+          </BsContent>
         )}
-        keyExtractor={item => item.title}
+        callbackNode={bsAnimNode}
+        borderRadius={8}
       />
-    </Messages>
+    </ScreenWrapper>
   );
 };
 
