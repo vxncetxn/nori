@@ -5,7 +5,7 @@ const MasonryGrid = styled.View`
   flex-direction: row;
 `;
 
-const MasonryGridCol = styled.FlatList`
+const MasonryGridCol = styled.View`
   width: ${props => 100 / props.cols}%;
   padding: ${props => {
     switch (props.idx) {
@@ -19,14 +19,7 @@ const MasonryGridCol = styled.FlatList`
   }};
 `;
 
-const MasonryGridComp = ({
-  cols,
-  gap,
-  data,
-  renderItem,
-  keyExtractor,
-  ...others
-}) => {
+const MasonryGridComp = ({ cols, gap, data, childGenFunc, ...others }) => {
   const splitDataArr = [];
   [...Array(cols).keys()].forEach(_ => splitDataArr.push([]));
   data.forEach((d, idx) => splitDataArr[idx % cols].push(d));
@@ -35,15 +28,9 @@ const MasonryGridComp = ({
     <MasonryGrid {...others}>
       {[...Array(cols).keys()].map((_, idx) => {
         return (
-          <MasonryGridCol
-            cols={cols}
-            gap={gap}
-            idx={idx}
-            scrollEnabled={false}
-            data={splitDataArr[idx]}
-            renderItem={renderItem}
-            keyExtractor={keyExtractor}
-          />
+          <MasonryGridCol key={idx} cols={cols} gap={gap} idx={idx}>
+            {splitDataArr[idx].map(d => childGenFunc(d))}
+          </MasonryGridCol>
         );
       })}
     </MasonryGrid>

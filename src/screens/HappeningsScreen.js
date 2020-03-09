@@ -133,14 +133,14 @@ const HappeningsScreen = () => {
         cols={2}
         gap={20}
         data={data}
-        renderItem={({ item }) => (
+        childGenFunc={d => (
           <Happening
-            title={item.title}
-            type={item.type}
-            cover={item.pictures[0]}
+            key={d.title}
+            title={d.title}
+            type={d.type}
+            cover={d.pictures[0]}
           />
         )}
-        keyExtractor={item => item.title}
       />
     </Happenings>
   );

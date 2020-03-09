@@ -1,7 +1,6 @@
 import React, { useRef, useState } from "react";
 import styled from "styled-components";
 import { Dimensions } from "react-native";
-import BottomSheet from "reanimated-bottom-sheet";
 import Animated from "react-native-reanimated";
 import { SimpleLineIcons } from "@expo/vector-icons";
 
@@ -10,8 +9,7 @@ import Constants from "../Constants";
 import MasonryGrid from "../components/MasonryGrid";
 import Message from "../components/Message";
 import Badge from "../components/Badge";
-
-import { Picker } from "react-native";
+import BottomSheet from "../components/BottomSheet";
 
 const ScreenWrapper = styled.View`
   flex: 1;
@@ -89,22 +87,6 @@ const ButtonLabel = styled.Text`
   font-family: "${Constants.fontSecondary}";
   font-size: 14px;
   color: white;
-`;
-
-const BsContent = styled.View`
-  background-color: ${Constants.colorBgLight};
-  height: ${Dimensions.get("window").height * 0.8}px;
-  padding: 70px 20px 0 20px;
-`;
-
-const BsGestureBar = styled.View`
-  position: absolute;
-  left: 55.5%;
-  top: 30px;
-  transform: translateX(-50px);
-  width: 100px;
-  height: 2.5px;
-  background-color: white;
 `;
 
 const BsContentSection = styled.View`
@@ -287,15 +269,15 @@ const MessagesScreen = () => {
             cols={2}
             gap={20}
             data={data}
-            renderItem={({ item }) => (
+            childGenFunc={d => (
               <Message
-                title={item.title}
-                type={item.type}
-                acknowledgementRequired={item.acknowledgementRequired}
-                consentRequired={item.consentRequired}
+                key={d.title}
+                title={d.title}
+                type={d.type}
+                acknowledgementRequired={d.acknowledgementRequired}
+                consentRequired={d.consentRequired}
               />
             )}
-            keyExtractor={item => item.title}
           />
         </Messages>
       </Overlay>
@@ -303,137 +285,127 @@ const MessagesScreen = () => {
         ref={bsRef}
         snapPoints={["80%", "0%"]}
         initialSnap={1}
-        renderContent={() => (
-          <BsContent>
-            <BsGestureBar />
-            <BsContentSection>
-              <BsContentSectionTitle>Filters</BsContentSectionTitle>
-              <FiltersRow>
-                <FiltersToggle
-                  onPress={() => {
-                    setPendingFilters({
-                      ...pendingFilters,
-                      Notice: !pendingFilters["Notice"]
-                    });
-                    setChangesMade(true);
-                  }}
-                >
-                  <FiltersBadge
-                    type="Notice"
-                    toggled={pendingFilters["Notice"]}
-                  >
-                    Notice {pendingFilters["Notice"] ? "✓" : "✗"}
-                  </FiltersBadge>
-                </FiltersToggle>
-                <FiltersToggle
-                  onPress={() => {
-                    setPendingFilters({
-                      ...pendingFilters,
-                      Event: !pendingFilters["Event"]
-                    });
-                    setChangesMade(true);
-                  }}
-                >
-                  <FiltersBadge type="Event" toggled={pendingFilters["Event"]}>
-                    Event {pendingFilters["Event"] ? "✓" : "✗"}
-                  </FiltersBadge>
-                </FiltersToggle>
-                <FiltersToggle
-                  onPress={() => {
-                    setPendingFilters({
-                      ...pendingFilters,
-                      Admin: !pendingFilters["Admin"]
-                    });
-                    setChangesMade(true);
-                  }}
-                >
-                  <FiltersBadge type="Admin" toggled={pendingFilters["Admin"]}>
-                    Admin {pendingFilters["Admin"] ? "✓" : "✗"}
-                  </FiltersBadge>
-                </FiltersToggle>
-              </FiltersRow>
-            </BsContentSection>
-            <BsContentSection>
-              <BsContentSectionTitle>Sort</BsContentSectionTitle>
-              <SortOption
-                onPress={() => {
-                  setPendingSort("Most Recent First");
-                  setChangesMade(true);
-                }}
-              >
-                <SortOptionLabel selected={pendingSort === "Most Recent First"}>
-                  Most Recent First{" "}
-                  {pendingSort === "Most Recent First" ? "✓" : null}
-                </SortOptionLabel>
-              </SortOption>
-              <SortOption
-                onPress={() => {
-                  setPendingSort("Priority");
-                  setChangesMade(true);
-                }}
-              >
-                <SortOptionLabel selected={pendingSort === "Priority"}>
-                  Priority {pendingSort === "Priority" ? "✓" : null}
-                </SortOptionLabel>
-              </SortOption>
-              <SortOption
-                onPress={() => {
-                  setPendingSort("Notice Items First");
-                  setChangesMade(true);
-                }}
-              >
-                <SortOptionLabel
-                  selected={pendingSort === "Notice Items First"}
-                >
-                  Notice Items First{" "}
-                  {pendingSort === "Notice Items First" ? "✓" : null}
-                </SortOptionLabel>
-              </SortOption>
-              <SortOption
-                onPress={() => {
-                  setPendingSort("Event Items First");
-                  setChangesMade(true);
-                }}
-              >
-                <SortOptionLabel selected={pendingSort === "Event Items First"}>
-                  Event Items First{" "}
-                  {pendingSort === "Event Items First" ? "✓" : null}
-                </SortOptionLabel>
-              </SortOption>
-              <SortOption
-                onPress={() => {
-                  setPendingSort("Admin Items First");
-                  setChangesMade(true);
-                }}
-              >
-                <SortOptionLabel selected={pendingSort === "Admin Item First"}>
-                  Admin Item First{" "}
-                  {pendingSort === "Admin Item First" ? "✓" : null}
-                </SortOptionLabel>
-              </SortOption>
-            </BsContentSection>
-            <BsContentSection style={{ marginTop: "auto" }}>
-              <BsButtonsRow style={{ alignItems: "center" }}>
-                <BsButton
-                  onPress={() => {
-                    setAppliedFilters(pendingFilters);
-                    setAppliedSort(pendingSort);
-                    requestAnimationFrame(() => bsRef.current.snapTo(1));
-                  }}
-                >
-                  <BsButtonLabel active={changesMade}>Apply</BsButtonLabel>
-                </BsButton>
-                <BsButton onPress={() => bsRef.current.snapTo(1)}>
-                  <BsButtonLabel active={true}>Cancel</BsButtonLabel>
-                </BsButton>
-              </BsButtonsRow>
-            </BsContentSection>
-          </BsContent>
-        )}
         callbackNode={bsAnimNode.current}
-        borderRadius={8}
         onCloseEnd={() => setChangesMade(false)}
-      />
+      >
+        <BsContentSection>
+          <BsContentSectionTitle>Filters</BsContentSectionTitle>
+          <FiltersRow>
+            <FiltersToggle
+              onPress={() => {
+                setPendingFilters({
+                  ...pendingFilters,
+                  Notice: !pendingFilters["Notice"]
+                });
+                setChangesMade(true);
+              }}
+            >
+              <FiltersBadge type="Notice" toggled={pendingFilters["Notice"]}>
+                Notice {pendingFilters["Notice"] ? "✓" : "✗"}
+              </FiltersBadge>
+            </FiltersToggle>
+            <FiltersToggle
+              onPress={() => {
+                setPendingFilters({
+                  ...pendingFilters,
+                  Event: !pendingFilters["Event"]
+                });
+                setChangesMade(true);
+              }}
+            >
+              <FiltersBadge type="Event" toggled={pendingFilters["Event"]}>
+                Event {pendingFilters["Event"] ? "✓" : "✗"}
+              </FiltersBadge>
+            </FiltersToggle>
+            <FiltersToggle
+              onPress={() => {
+                setPendingFilters({
+                  ...pendingFilters,
+                  Admin: !pendingFilters["Admin"]
+                });
+                setChangesMade(true);
+              }}
+            >
+              <FiltersBadge type="Admin" toggled={pendingFilters["Admin"]}>
+                Admin {pendingFilters["Admin"] ? "✓" : "✗"}
+              </FiltersBadge>
+            </FiltersToggle>
+          </FiltersRow>
+        </BsContentSection>
+        <BsContentSection>
+          <BsContentSectionTitle>Sort</BsContentSectionTitle>
+          <SortOption
+            onPress={() => {
+              setPendingSort("Most Recent First");
+              setChangesMade(true);
+            }}
+          >
+            <SortOptionLabel selected={pendingSort === "Most Recent First"}>
+              Most Recent First{" "}
+              {pendingSort === "Most Recent First" ? "✓" : null}
+            </SortOptionLabel>
+          </SortOption>
+          <SortOption
+            onPress={() => {
+              setPendingSort("Priority");
+              setChangesMade(true);
+            }}
+          >
+            <SortOptionLabel selected={pendingSort === "Priority"}>
+              Priority {pendingSort === "Priority" ? "✓" : null}
+            </SortOptionLabel>
+          </SortOption>
+          <SortOption
+            onPress={() => {
+              setPendingSort("Notice Items First");
+              setChangesMade(true);
+            }}
+          >
+            <SortOptionLabel selected={pendingSort === "Notice Items First"}>
+              Notice Items First{" "}
+              {pendingSort === "Notice Items First" ? "✓" : null}
+            </SortOptionLabel>
+          </SortOption>
+          <SortOption
+            onPress={() => {
+              setPendingSort("Event Items First");
+              setChangesMade(true);
+            }}
+          >
+            <SortOptionLabel selected={pendingSort === "Event Items First"}>
+              Event Items First{" "}
+              {pendingSort === "Event Items First" ? "✓" : null}
+            </SortOptionLabel>
+          </SortOption>
+          <SortOption
+            onPress={() => {
+              setPendingSort("Admin Items First");
+              setChangesMade(true);
+            }}
+          >
+            <SortOptionLabel selected={pendingSort === "Admin Items First"}>
+              Admin Items First{" "}
+              {pendingSort === "Admin Items First" ? "✓" : null}
+            </SortOptionLabel>
+          </SortOption>
+        </BsContentSection>
+        <BsContentSection style={{ marginTop: "auto" }}>
+          <BsButtonsRow style={{ alignItems: "center" }}>
+            <BsButton
+              onPress={() => {
+                requestAnimationFrame(() => bsRef.current.snapTo(1));
+                setAppliedFilters(pendingFilters);
+                setAppliedSort(pendingSort);
+              }}
+            >
+              <BsButtonLabel active={changesMade}>Apply</BsButtonLabel>
+            </BsButton>
+            <BsButton onPress={() => bsRef.current.snapTo(1)}>
+              <BsButtonLabel active={true}>Cancel</BsButtonLabel>
+            </BsButton>
+          </BsButtonsRow>
+        </BsContentSection>
+      </BottomSheet>
     </ScreenWrapper>
   );
 };
