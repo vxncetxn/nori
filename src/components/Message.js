@@ -1,9 +1,10 @@
 import React from "react";
 import styled from "styled-components";
+import { FontAwesome } from "@expo/vector-icons";
 
 import Constants from "../Constants";
 
-import { FontAwesome } from "@expo/vector-icons";
+import Badge from "../components/Badge";
 
 const Message = styled.View`
   background-color: ${props =>
@@ -20,13 +21,7 @@ const MessageBadgeRow = styled.ScrollView`
   overflow: scroll;
 `;
 
-const MessageTypeBadge = styled.Text`
-  overflow: hidden;
-  color: white;
-  font-size: 14px;
-  font-family: "${Constants.fontSecondary}";
-  padding: 2.5px 5px;
-  border-radius: 8px;
+const MessageTypeBadge = styled(Badge)`
   background-color: ${props => {
     switch (props.type) {
       case "Notice":
@@ -43,7 +38,7 @@ const MessageTypeBadge = styled.Text`
 
 const MessageTitle = styled.Text`
   color: white;
-  font-size: 16px;
+  font-size: 20px;
   font-family: "${Constants.fontPrimary}";
   margin-bottom: 20px;
 `;

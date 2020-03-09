@@ -3,6 +3,8 @@ import styled from "styled-components";
 
 import Constants from "../Constants";
 
+import Badge from "../components/Badge";
+
 const Happening = styled.View`
   background-color: ${props =>
     props.highlight ? Constants.colorBgLighter : Constants.colorBgLighter};
@@ -26,20 +28,14 @@ const HappeningBadgeRow = styled.ScrollView`
   overflow: scroll;
 `;
 
-const HappeningTypeBadge = styled.Text`
-  overflow: hidden;
-  color: white;
-  font-size: 14px;
-  font-family: "${Constants.fontSecondary}";
-  padding: 2.5px 5px;
-  border-radius: 8px;
+const HappeningTypeBadge = styled(Badge)`
   background-color: ${props => {
     switch (props.type) {
-      case "Notice":
+      case "Weekly":
         return "#0080ff";
       case "Event":
         return "#ff00ff";
-      case "Admin":
+      case "In-class":
         return "#8000ff";
       default:
         break;
@@ -49,7 +45,7 @@ const HappeningTypeBadge = styled.Text`
 
 const HappeningTitle = styled.Text`
 color: white;
-font-size: 16px;
+font-size: 20px;
 font-family: "${Constants.fontPrimary}";
 margin-bottom: 20px;
 `;

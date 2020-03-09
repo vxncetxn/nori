@@ -86,19 +86,19 @@ const data = [
   {
     createdDate: new Date(),
     title: "Last Sunday painting workshop",
-    type: "Event",
+    type: "Weekly",
     pictures: [require("../../assets/images/happenings-stock-one.jpg")]
   },
   {
     createdDate: new Date(),
     title: "Some great pictures from Zoo trip on 22nd February",
-    type: "Admin",
+    type: "Event",
     pictures: [require("../../assets/images/happenings-stock-two.jpg")]
   },
   {
     createdDate: new Date(),
     title: "Sunday soccer",
-    type: "Notice",
+    type: "In-class",
     pictures: [require("../../assets/images/happenings-stock-three.jpg")]
   }
 ];
