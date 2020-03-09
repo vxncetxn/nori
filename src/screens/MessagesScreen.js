@@ -4,8 +4,6 @@ import { Dimensions } from "react-native";
 import Animated from "react-native-reanimated";
 import { SimpleLineIcons } from "@expo/vector-icons";
 
-import Constants from "../Constants";
-
 import MasonryGrid from "../components/MasonryGrid";
 import Message from "../components/Message";
 import Badge from "../components/Badge";
@@ -17,7 +15,7 @@ const ScreenWrapper = styled.View`
 `;
 
 const Messages = styled.ScrollView`
-  background-color: ${Constants.colorBg};
+  background-color: ${props => props.theme.colorBg};
   height: auto;
 `;
 
@@ -25,7 +23,7 @@ const Hero = styled.View`
   flex-direction: row;
   height: 205px;
   height: ${Dimensions.get("window").height * 0.3}px;
-  background-color: ${Constants.colorAccent};
+  background-color: ${props => props.theme.colorAccent};
   border-bottom-right-radius: 50px;
   padding: 40px 20px 20px 20px;
 `;
@@ -43,9 +41,9 @@ const HeroImage = styled.Image`
 `;
 
 const HeroTitle = styled.Text`
-  font-family: "${Constants.fontPrimary}";
+  font-family: "${props => props.theme.fontPrimary}";
   font-size: 36px;
-  color: ${Constants.colorBg};
+  color: ${props => props.theme.colorBg};
   margin-bottom: auto;
 `;
 
@@ -69,7 +67,7 @@ const SearchBar = styled.TextInput`
   background-color: white;
   border-radius: 10px;
   padding: 10px 35px;
-  font-family: "${Constants.fontSecondary}";
+  font-family: "${props => props.theme.fontSecondary}";
   font-size: 14px;
 `;
 
@@ -84,7 +82,7 @@ const Button = styled.TouchableOpacity`
 `;
 
 const ButtonLabel = styled.Text`
-  font-family: "${Constants.fontSecondary}";
+  font-family: "${props => props.theme.fontSecondary}";
   font-size: 14px;
   color: white;
 `;
@@ -94,9 +92,9 @@ const BsContentSection = styled.View`
 `;
 
 const BsContentSectionTitle = styled.Text`
-  color: white;
+  color: ${props => props.theme.colorText};
   font-size: 20px;
-  font-family: "${Constants.fontPrimary}";
+  font-family: "${props => props.theme.fontPrimary}";
   margin-bottom: 20px;
 `;
 
@@ -120,7 +118,7 @@ const FiltersBadge = styled(Badge)`
         return "#8000ff";
       }
     } else {
-      return "#333333";
+      return props.theme.colorInactiveGrey;
     }
   }};
 `;
@@ -128,9 +126,10 @@ const FiltersBadge = styled(Badge)`
 const SortOption = styled.TouchableOpacity``;
 
 const SortOptionLabel = styled.Text`
-  color: ${props => (props.selected ? Constants.colorAccent : "white")};
+  color: ${props =>
+    props.selected ? props => props.theme.colorAccent : props.theme.colorText};
   font-size: 14px;
-  font-family: "${Constants.fontSecondary}";
+  font-family: "${props => props.theme.fontSecondary}";
   margin-bottom: 15px
 `;
 
@@ -144,9 +143,12 @@ const BsButtonsRow = styled.View`
 const BsButton = styled.TouchableOpacity``;
 
 const BsButtonLabel = styled.Text`
-  color: ${props => (props.active ? Constants.colorAccent : "#333333")};
+  color: ${props =>
+    props.active
+      ? props => props.theme.colorAccent
+      : props.theme.colorInactiveGrey};
   font-size: 20px;
-  font-family: "${Constants.fontPrimary}";
+  font-family: "${props => props.theme.fontPrimary}";
 `;
 
 const Overlay = styled(Animated.View)`
@@ -251,7 +253,7 @@ const MessagesScreen = () => {
                   <Button
                     onPress={() => {
                       setPendingFilters(appliedFilters);
-                      setPendingSort(pendingSort);
+                      setPendingSort(appliedSort);
                       requestAnimationFrame(() => bsRef.current.snapTo(0));
                     }}
                   >
@@ -397,6 +399,7 @@ const MessagesScreen = () => {
                 setAppliedFilters(pendingFilters);
                 setAppliedSort(pendingSort);
               }}
+              disabled={!changesMade}
             >
               <BsButtonLabel active={changesMade}>Apply</BsButtonLabel>
             </BsButton>

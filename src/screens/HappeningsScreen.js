@@ -2,15 +2,13 @@ import React from "react";
 import styled from "styled-components";
 import { Dimensions } from "react-native";
 
-import Constants from "../Constants";
-
 import MasonryGrid from "../components/MasonryGrid";
 import Happening from "../components/Happening";
 
 import { SimpleLineIcons } from "@expo/vector-icons";
 
 const Happenings = styled.ScrollView`
-  background-color: ${Constants.colorBg};
+  background-color: ${props => props.theme.colorBg};
   height: auto;
 `;
 
@@ -18,7 +16,7 @@ const Hero = styled.View`
   flex-direction: row;
   height: 205px;
   height: ${Dimensions.get("window").height * 0.3}px;
-  background-color: ${Constants.colorAccent};
+  background-color: ${props => props.theme.colorAccent};
   border-bottom-right-radius: 50px;
   padding: 40px 20px 20px 20px;
 `;
@@ -36,9 +34,9 @@ const HeroImage = styled.Image`
 `;
 
 const HeroTitle = styled.Text`
-  font-family: "${Constants.fontPrimary}";
+  font-family: "${props => props.theme.fontPrimary}";
   font-size: 36px;
-  color: ${Constants.colorBg};
+  color: ${props => props.theme.colorBg};
   margin-bottom: auto;
 `;
 
@@ -62,7 +60,7 @@ const SearchBar = styled.TextInput`
   background-color: white;
   border-radius: 10px;
   padding: 10px 35px;
-  font-family: "${Constants.fontSecondary}";
+  font-family: "${props => props.theme.fontSecondary}";
   font-size: 14px;
 `;
 
@@ -77,7 +75,7 @@ const Button = styled.TouchableOpacity`
 `;
 
 const ButtonLabel = styled.Text`
-  font-family: "${Constants.fontSecondary}";
+  font-family: "${props => props.theme.fontSecondary}";
   font-size: 14px;
   color: white;
 `;

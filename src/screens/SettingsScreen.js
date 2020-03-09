@@ -1,19 +1,17 @@
 import React from "react";
 import styled from "styled-components";
 
-import Constants from "../Constants";
-
 const Settings = styled.View`
   flex: 1;
-  background-color: ${Constants.colorBg};
+  background-color: ${props => props.theme.colorBg};
   justify-content: center;
   align-items: center;
 `;
 
 const HeroTitle = styled.Text`
-  font-family: "${Constants.fontPrimary}";
+  font-family: "${props => props.theme.fontPrimary}";
   font-size: 48px;
-  color: ${Constants.colorAccent};
+  color: ${props => props.theme.colorAccent};
 `;
 
 const SettingsScreen = () => {
