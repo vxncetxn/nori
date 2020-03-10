@@ -1,12 +1,12 @@
 import React, { useContext } from "react";
 import styled, { ThemeContext } from "styled-components";
 import { FontAwesome } from "@expo/vector-icons";
+import { formatDistanceToNow } from "date-fns";
 
 import Badge from "../components/Badge";
 
-const Message = styled.View`
-  background-color: ${props =>
-    props.highlight ? props.theme.colorBgCard : props.theme.colorBgCard};
+const Message = styled.TouchableOpacity`
+  background-color: ${props => props.theme.colorBgCard};
   padding: 10px;
   margin-top: 20px;
   border-radius: 8px;
@@ -54,16 +54,13 @@ const MessageAction = styled.Text`
   margin-top: 10px;
 `;
 
-const MessageComp = ({
-  title,
-  type,
-  acknowledgementRequired,
-  consentRequired
-}) => {
+const MessageComp = ({ onPress, datum, ...others }) => {
+  const { createdDate, type, title, response } = datum;
+  const { responseType, responded } = response;
   const theme = useContext(ThemeContext);
 
   return (
-    <Message highlight={acknowledgementRequired || consentRequired}>
+    <Message onPress={onPress} {...others}>
       <MessageBadgeRow horizontal={true} showsHorizontalScrollIndicator={false}>
         <MessageTypeBadge type={type}>{type}</MessageTypeBadge>
         {/* <MessageTypeBadge type={type} style={{ marginLeft: 10 }}>
@@ -80,19 +77,27 @@ const MessageComp = ({
         </MessageTypeBadge> */}
       </MessageBadgeRow>
       <MessageTitle>{title}</MessageTitle>
-      <MessageDate>Posted 2 days ago</MessageDate>
-      {acknowledgementRequired && (
-        <MessageAction>
-          <FontAwesome name="exclamation" size={11} color={theme.colorAccent} />{" "}
-          Acknowledgement Required
-        </MessageAction>
-      )}
-      {consentRequired && (
-        <MessageAction>
-          <FontAwesome name="exclamation" size={12} color={theme.colorAccent} />{" "}
-          Consent Required
-        </MessageAction>
-      )}
+      <MessageDate>Posted {formatDistanceToNow(createdDate)} ago</MessageDate>
+      {!responded &&
+        (responseType === "Acknowledgement" ? (
+          <MessageAction>
+            <FontAwesome
+              name="exclamation"
+              size={12}
+              color={theme.colorAccent}
+            />{" "}
+            Acknowledgement Required
+          </MessageAction>
+        ) : responseType === "Consent" ? (
+          <MessageAction>
+            <FontAwesome
+              name="exclamation"
+              size={12}
+              color={theme.colorAccent}
+            />{" "}
+            Consent Required
+          </MessageAction>
+        ) : null)}
     </Message>
   );
 };

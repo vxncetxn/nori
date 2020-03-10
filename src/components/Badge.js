@@ -3,7 +3,7 @@ import styled from "styled-components";
 
 const Badge = styled.Text`
 overflow: hidden;
-color: white;
+color: ${props => props.theme.colorWhite};
 font-size: 14px;
 font-family: "${props => props.theme.fontSecondary}";
 padding: 2.5px 5px;

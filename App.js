@@ -9,7 +9,8 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { SimpleLineIcons, FontAwesome } from "@expo/vector-icons";
 import { AppearanceProvider, useColorScheme } from "react-native-appearance";
 
-import MessagesScreen from "./src/screens/MessagesScreen";
+// import MessagesScreen from "./src/screens/MessagesScreen";
+import MessagesStack from "./src/MessagesStack";
 import ProgressScreen from "./src/screens/ProgressScreen";
 import HappeningsScreen from "./src/screens/HappeningsScreen";
 import ChatScreen from "./src/screens/ChatScreen";
@@ -41,22 +42,21 @@ const cacheImages = images => {
   });
 };
 
-const cacheFonts = fonts => {
-  return fonts.map(font => Font.loadAsync({ font }));
-};
-
 export default function App() {
   const colorScheme = useColorScheme();
   const theme = {
     fontPrimary: "Techna Sans",
-    fontSecondary: "Inter Regular",
+    fontSecondary: "Inter Medium",
     colorBg: colorScheme === "light" ? "#f8f4ec" : "#000000",
     colorBgNav: colorScheme === "light" ? "#f7f2e9" : "#0d0d0d",
     colorBgCard: colorScheme === "light" ? "#f4eee1" : "#141414",
     colorAccent: "#ffac00",
     colorAccentTwo: "#5900ff",
     colorText: colorScheme === "light" ? "#333333" : "#eaeaea",
-    colorInactiveGrey: colorScheme === "light" ? "#cccccc" : "#333333"
+    colorInactiveGrey: colorScheme === "light" ? "#cccccc" : "#333333",
+    colorWhite: "#f8f4ec",
+    colorGreen: "#00e639",
+    colorRed: "#ff4000"
   };
 
   const [assetsLoaded, setAssetsLoaded] = useState(false);
@@ -71,7 +71,7 @@ export default function App() {
       const loadFontsPromise = Font.loadAsync({
         "Techna Sans": require("./assets/fonts/TechnaSans-Regular.otf"),
         "Inter Regular": require("./assets/fonts/Inter-Regular.otf"),
-        "Inter Bold": require("./assets/fonts/Inter-Bold.otf")
+        "Inter Medium": require("./assets/fonts/Inter-Medium.otf")
       });
 
       await Promise.all([...loadImagesPromises, loadFontsPromise]);
@@ -142,7 +142,7 @@ export default function App() {
               }
             }}
           >
-            <Tab.Screen name="Messages" component={MessagesScreen} />
+            <Tab.Screen name="Messages" component={MessagesStack} />
             <Tab.Screen name="Progress" component={ProgressScreen} />
             <Tab.Screen name="Happenings" component={HappeningsScreen} />
             <Tab.Screen name="Chat" component={ChatScreen} />

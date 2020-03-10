@@ -21,7 +21,6 @@ const Messages = styled.ScrollView`
 
 const Hero = styled.View`
   flex-direction: row;
-  height: 205px;
   height: ${Dimensions.get("window").height * 0.3}px;
   background-color: ${props => props.theme.colorAccent};
   border-bottom-right-radius: 50px;
@@ -64,7 +63,7 @@ const SearchBarIcon = styled(SimpleLineIcons)`
 
 const SearchBar = styled.TextInput`
   width: 100%;
-  background-color: white;
+  background-color: ${props => props.theme.colorWhite};
   border-radius: 10px;
   padding: 10px 35px;
   font-family: "${props => props.theme.fontSecondary}";
@@ -77,14 +76,14 @@ const ButtonsRow = styled.View`
 
 const Button = styled.TouchableOpacity`
   padding: 2.5px 15px;
-  border: 1px solid white;
+  border: 1px solid ${props => props.theme.colorWhite};
   border-radius: 8px;
 `;
 
 const ButtonLabel = styled.Text`
   font-family: "${props => props.theme.fontSecondary}";
   font-size: 14px;
-  color: white;
+  color: ${props => props.theme.colorWhite};
 `;
 
 const BsContentSection = styled.View`
@@ -161,51 +160,99 @@ const Overlay = styled(Animated.View)`
 
 const data = [
   {
-    createdDate: new Date(),
+    createdDate: new Date(2020, 3, 1),
+    targetDate: new Date(2020, 3, 21),
     type: "Notice",
     title: "School cancelled on 21st March for spring cleaning",
-    acknowledgementRequired: true,
-    consentRequired: false
+    publisher: {
+      publisherName: "Ms Chen",
+      publisherPic: require("../../assets/images/profile-stock-one.jpg")
+    },
+    response: {
+      responseType: "Acknowledgement",
+      deadline: new Date(2020, 3, 20),
+      responded: false
+    }
   },
   {
-    createdDate: new Date(),
+    createdDate: new Date(2020, 3, 5),
+    targetDate: new Date(2020, 4, 4),
     type: "Event",
     title: "Excursion to East Coast Beach on 4th April 2020",
-    acknowledgementRequired: false,
-    consentRequired: true
+    publisher: {
+      publisherName: "Mr Lim",
+      publisherPic: require("../../assets/images/profile-stock-two.jpg")
+    },
+    response: {
+      responseType: "Consent",
+      deadline: new Date(2020, 3, 29),
+      responded: true
+    }
   },
   {
-    createdDate: new Date(),
+    createdDate: new Date(2020, 2, 10),
+    targetDate: null,
     type: "Notice",
     title:
       "Excursion to Singapore Zoo on 15th March 2020 cancelled due to COVID-19",
-    acknowledgementRequired: false,
-    consentRequired: false
+    publisher: {
+      publisherName: "Mr Lim",
+      publisherPic: require("../../assets/images/profile-stock-two.jpg")
+    },
+    response: {
+      responseType: "",
+      deadline: null,
+      responded: null
+    }
   },
   {
-    createdDate: new Date(),
+    createdDate: new Date(2020, 2, 24),
+    targetDate: null,
     type: "Notice",
     title: "Sign up for Art-4-Good Competition",
-    acknowledgementRequired: false,
-    consentRequired: false
+    publisher: {
+      publisherName: "Mdm Teo",
+      publisherPic: require("../../assets/images/profile-stock-three.jpg")
+    },
+    response: {
+      responseType: "",
+      deadline: null,
+      responded: null
+    }
   },
   {
-    createdDate: new Date(),
+    createdDate: new Date(2020, 3, 2),
+    targetDate: new Date(2020, 4, 22),
     type: "Event",
     title: "Learning journey to Singapore Origami Center",
-    acknowledgementRequired: false,
-    consentRequired: true
+    publisher: {
+      publisherName: "Mr Lim",
+      publisherPic: require("../../assets/images/profile-stock-two.jpg")
+    },
+    response: {
+      responseType: "Consent",
+      deadline: new Date(2020, 4, 19),
+      responded: false
+    }
   },
   {
-    createdDate: new Date(),
+    createdDate: new Date(2020, 3, 1),
+    targetDate: null,
     type: "Admin",
     title: "School fees for March 2020",
-    acknowledgementRequired: true,
-    consentRequired: false
+    publisher: {
+      publisherName: "Ms Chen",
+      publisherPic: require("../../assets/images/profile-stock-one.jpg")
+    },
+    response: {
+      responseType: "Acknowledgement",
+      deadline: new Date(2020, 3, 20),
+      responded: true
+    }
   }
 ];
 
-const MessagesScreen = () => {
+const MessagesScreen = ({ navigation }) => {
   const bsRef = useRef();
   const bsAnimNode = useRef(new Animated.Value(1));
 
@@ -274,10 +321,15 @@ const MessagesScreen = () => {
             childGenFunc={d => (
               <Message
                 key={d.title}
-                title={d.title}
-                type={d.type}
-                acknowledgementRequired={d.acknowledgementRequired}
-                consentRequired={d.consentRequired}
+                onPress={() =>
+                  navigation.navigate("MessagesEntry", {
+                    ...d,
+                    createdDate: JSON.stringify(d.createdDate),
+                    targetDate: JSON.stringify(d.targetDate),
+                    response: JSON.stringify(d.response)
+                  })
+                }
+                datum={d}
               />
             )}
           />

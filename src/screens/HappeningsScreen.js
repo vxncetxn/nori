@@ -57,7 +57,7 @@ const SearchBarIcon = styled(SimpleLineIcons)`
 
 const SearchBar = styled.TextInput`
   width: 100%;
-  background-color: white;
+  background-color: ${props => props.theme.colorWhite};
   border-radius: 10px;
   padding: 10px 35px;
   font-family: "${props => props.theme.fontSecondary}";
@@ -70,14 +70,14 @@ const ButtonsRow = styled.View`
 
 const Button = styled.TouchableOpacity`
   padding: 2.5px 15px;
-  border: 1px solid white;
+  border: 1px solid ${props => props.theme.colorWhite};
   border-radius: 8px;
 `;
 
 const ButtonLabel = styled.Text`
   font-family: "${props => props.theme.fontSecondary}";
   font-size: 14px;
-  color: white;
+  color: ${props => props.theme.colorWhite};
 `;
 
 const data = [
@@ -131,14 +131,7 @@ const HappeningsScreen = () => {
         cols={2}
         gap={20}
         data={data}
-        childGenFunc={d => (
-          <Happening
-            key={d.title}
-            title={d.title}
-            type={d.type}
-            cover={d.pictures[0]}
-          />
-        )}
+        childGenFunc={d => <Happening key={d.title} datum={d} />}
       />
     </Happenings>
   );

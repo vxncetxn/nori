@@ -3,7 +3,7 @@ import styled from "styled-components";
 
 import Badge from "../components/Badge";
 
-const Happening = styled.View`
+const Happening = styled.TouchableOpacity`
   background-color: ${props =>
     props.highlight ? props.theme.colorBgCard : props.theme.colorBgCard};
   margin-top: 20px;
@@ -54,10 +54,12 @@ const HappeningDate = styled.Text`
   font-family: "${props => props.theme.fontSecondary}";
 `;
 
-const HappeningComp = ({ title, type, cover }) => {
+const HappeningComp = ({ onPress, datum, ...others }) => {
+  const { title, type, pictures, createdDate } = datum;
+
   return (
-    <Happening>
-      <HappeningImage source={cover} />
+    <Happening onPress={onPress} {...others}>
+      <HappeningImage source={pictures[0]} />
       <HappeningContent>
         <HappeningBadgeRow
           horizontal={true}
