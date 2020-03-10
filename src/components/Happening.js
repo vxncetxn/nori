@@ -1,23 +1,27 @@
 import React from "react";
 import styled from "styled-components";
+import { LinearGradient } from "expo-linear-gradient";
+import { formatDistanceToNow } from "date-fns";
 
 import Badge from "../components/Badge";
 
-const Happening = styled.TouchableOpacity`
+const HappeningButton = styled.TouchableOpacity``;
+
+const Happening = styled.ImageBackground`
   background-color: ${props =>
     props.highlight ? props.theme.colorBgCard : props.theme.colorBgCard};
   margin-top: 20px;
   border-radius: 8px;
   overflow: hidden;
+  padding: 100px 10px 10px 10px;
 `;
 
-const HappeningImage = styled.Image`
-  width: 100%;
-  height: 150px;
-`;
-
-const HappeningContent = styled.View`
-  padding: 10px;
+const ImageTint = styled(LinearGradient)`
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
 `;
 
 const HappeningBadgeRow = styled.ScrollView`
@@ -55,12 +59,14 @@ const HappeningDate = styled.Text`
 `;
 
 const HappeningComp = ({ onPress, datum, ...others }) => {
-  const { title, type, pictures, createdDate } = datum;
+  const { createdDate, title, type, pictures } = datum;
 
   return (
-    <Happening onPress={onPress} {...others}>
-      <HappeningImage source={pictures[0]} />
-      <HappeningContent>
+    <HappeningButton onPress={onPress}>
+      <Happening source={pictures[0]} {...others}>
+        <ImageTint
+          colors={["rgba(0, 0, 0, 0.1)", "rgba(0, 0, 0, 0.8)"]}
+        ></ImageTint>
         <HappeningBadgeRow
           horizontal={true}
           showsHorizontalScrollIndicator={false}
@@ -68,9 +74,11 @@ const HappeningComp = ({ onPress, datum, ...others }) => {
           <HappeningTypeBadge type={type}>{type}</HappeningTypeBadge>
         </HappeningBadgeRow>
         <HappeningTitle>{title}</HappeningTitle>
-        <HappeningDate>Posted 2 days ago</HappeningDate>
-      </HappeningContent>
-    </Happening>
+        <HappeningDate>
+          Posted {formatDistanceToNow(createdDate)} ago
+        </HappeningDate>
+      </Happening>
+    </HappeningButton>
   );
 };
 

@@ -82,26 +82,41 @@ const ButtonLabel = styled.Text`
 
 const data = [
   {
-    createdDate: new Date(),
-    title: "Last Sunday painting workshop",
-    type: "Weekly",
-    pictures: [require("../../assets/images/happenings-stock-one.jpg")]
-  },
-  {
-    createdDate: new Date(),
-    title: "Some great pictures from Zoo trip on 22nd February",
-    type: "Event",
-    pictures: [require("../../assets/images/happenings-stock-two.jpg")]
-  },
-  {
-    createdDate: new Date(),
+    createdDate: new Date(2020, 2, 9),
     title: "Sunday soccer",
     type: "In-class",
-    pictures: [require("../../assets/images/happenings-stock-three.jpg")]
+    pictures: [
+      require("../../assets/images/happenings-stock-three.jpg"),
+      require("../../assets/images/happenings-stock-four.jpg")
+    ],
+    publisher: {
+      publisherName: "Mdm Teo",
+      publisherPic: require("../../assets/images/profile-stock-three.jpg")
+    }
+  },
+  {
+    createdDate: new Date(2020, 2, 5),
+    title: "Last Sunday painting workshop",
+    type: "Weekly",
+    pictures: [require("../../assets/images/happenings-stock-one.jpg")],
+    publisher: {
+      publisherName: "Ms Chen",
+      publisherPic: require("../../assets/images/profile-stock-one.jpg")
+    }
+  },
+  {
+    createdDate: new Date(2020, 1, 25),
+    title: "Some great pictures from Zoo trip on 22nd February",
+    type: "Event",
+    pictures: [require("../../assets/images/happenings-stock-two.jpg")],
+    publisher: {
+      publisherName: "Mr Lim",
+      publisherPic: require("../../assets/images/profile-stock-two.jpg")
+    }
   }
 ];
 
-const HappeningsScreen = () => {
+const HappeningsScreen = ({ navigation }) => {
   return (
     <Happenings showsVerticalScrollIndicator={false}>
       <Hero>
@@ -131,7 +146,18 @@ const HappeningsScreen = () => {
         cols={2}
         gap={20}
         data={data}
-        childGenFunc={d => <Happening key={d.title} datum={d} />}
+        childGenFunc={d => (
+          <Happening
+            key={d.title}
+            onPress={() =>
+              navigation.navigate("HappeningsEntry", {
+                ...d,
+                createdDate: JSON.stringify(d.createdDate)
+              })
+            }
+            datum={d}
+          />
+        )}
       />
     </Happenings>
   );

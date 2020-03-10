@@ -160,8 +160,12 @@ const Overlay = styled(Animated.View)`
 
 const data = [
   {
-    createdDate: new Date(2020, 3, 1),
-    targetDate: new Date(2020, 3, 21),
+    createdDate: new Date(2020, 2, 1),
+    targetDetails: {
+      targetDate: new Date(2020, 2, 21),
+      targetDateType: "occurence",
+      targetLocation: null
+    },
     type: "Notice",
     title: "School cancelled on 21st March for spring cleaning",
     publisher: {
@@ -175,8 +179,12 @@ const data = [
     }
   },
   {
-    createdDate: new Date(2020, 3, 5),
-    targetDate: new Date(2020, 4, 4),
+    createdDate: new Date(2020, 2, 5),
+    targetDetails: {
+      targetDate: new Date(2020, 3, 4),
+      targetDateType: "occurence",
+      targetLocation: "1018 East Coast Parkway, Singapore 449877"
+    },
     type: "Event",
     title: "Excursion to East Coast Beach on 4th April 2020",
     publisher: {
@@ -191,7 +199,11 @@ const data = [
   },
   {
     createdDate: new Date(2020, 2, 10),
-    targetDate: null,
+    targetDetails: {
+      targetDate: null,
+      targetDateType: null,
+      targetLocation: null
+    },
     type: "Notice",
     title:
       "Excursion to Singapore Zoo on 15th March 2020 cancelled due to COVID-19",
@@ -207,7 +219,11 @@ const data = [
   },
   {
     createdDate: new Date(2020, 2, 24),
-    targetDate: null,
+    targetDetails: {
+      targetDate: null,
+      targetDateType: null,
+      targetLocation: null
+    },
     type: "Notice",
     title: "Sign up for Art-4-Good Competition",
     publisher: {
@@ -221,10 +237,15 @@ const data = [
     }
   },
   {
-    createdDate: new Date(2020, 3, 2),
-    targetDate: new Date(2020, 4, 22),
+    createdDate: new Date(2020, 2, 2),
+    targetDetails: {
+      targetDate: new Date(2020, 3, 22),
+      targetDateType: "occurence",
+      targetLocation:
+        "1 Fifth Ave, #02-01/02/03/04 Guthrie House, Singapore 268802"
+    },
     type: "Event",
-    title: "Learning journey to Singapore Origami Center",
+    title: "Learning journey to Singapore Origami Center on 4th April 2020",
     publisher: {
       publisherName: "Mr Lim",
       publisherPic: require("../../assets/images/profile-stock-two.jpg")
@@ -237,7 +258,11 @@ const data = [
   },
   {
     createdDate: new Date(2020, 3, 1),
-    targetDate: null,
+    targetDetails: {
+      targetDate: new Date(2020, 2, 31),
+      targetDateType: "deadline",
+      targetLocation: null
+    },
     type: "Admin",
     title: "School fees for March 2020",
     publisher: {
@@ -325,7 +350,7 @@ const MessagesScreen = ({ navigation }) => {
                   navigation.navigate("MessagesEntry", {
                     ...d,
                     createdDate: JSON.stringify(d.createdDate),
-                    targetDate: JSON.stringify(d.targetDate),
+                    targetDetails: JSON.stringify(d.targetDetails),
                     response: JSON.stringify(d.response)
                   })
                 }

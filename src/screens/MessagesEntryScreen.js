@@ -4,6 +4,8 @@ import { SimpleLineIcons, FontAwesome } from "@expo/vector-icons";
 import { format, formatDistanceToNow } from "date-fns";
 
 import Badge from "../components/Badge";
+import RegText from "../components/RegText";
+import AccentedText from "../components/AccentedText";
 
 const MessagesEntry = styled.ScrollView`
   background-color: ${props => props.theme.colorBg};
@@ -89,19 +91,12 @@ const MainContent = styled.View`
   padding: 40px 20px 60px 20px;
 `;
 
-const ResponseAlert = styled.Text`
-  font-size: 16px;
-  font-family: "${props => props.theme.fontSecondary}";
-  color: ${props => props.theme.colorAccent};
+const TargetDateText = styled.Text`
   margin-bottom: 20px;
 `;
 
-const DetailsText = styled.Text`
-  color: ${props => props.theme.colorText};
-  font-size: 16px;
-  font-family: "${props => props.theme.fontSecondary}";
-  line-height: 30px;
-  margin-bottom: 60px;
+const LocationText = styled.Text`
+  margin-bottom: 20px;
 `;
 
 const ResponseButton = styled.TouchableOpacity`
@@ -131,14 +126,16 @@ const ResponseButtonLabel = styled.Text`
 const MessagesEntryScreen = ({ route, navigation }) => {
   let {
     createdDate,
-    targetDate,
+    targetDetails,
     type,
     title,
     publisher,
     response
   } = route.params;
   createdDate = JSON.parse(createdDate);
-  targetDate = JSON.parse(targetDate);
+  const { targetDate, targetDateType, targetLocation } = JSON.parse(
+    targetDetails
+  );
   const { publisherName, publisherPic } = publisher;
   const { responseType, deadline, responded } = JSON.parse(response);
 
@@ -230,16 +227,30 @@ const MessagesEntryScreen = ({ route, navigation }) => {
       </Hero>
       <MainContent>
         {responseAlertPresent ? (
-          <ResponseAlert>
+          <AccentedText style={{ marginBottom: 40 }}>
             <FontAwesome
               name="exclamation"
               size={15}
               color={theme.colorAccent}
             />{" "}
             {responseAlertString}
-          </ResponseAlert>
+          </AccentedText>
         ) : null}
-        <DetailsText>
+        {targetDate ? (
+          <TargetDateText>
+            <AccentedText>
+              {targetDateType === "occurence" ? "Happening on" : "Due on"}:{" "}
+            </AccentedText>
+            <RegText>{format(new Date(targetDate), "do LLLL yyyy")}</RegText>
+          </TargetDateText>
+        ) : null}
+        {targetLocation ? (
+          <LocationText>
+            <AccentedText>Location: </AccentedText>
+            <RegText>{targetLocation}</RegText>
+          </LocationText>
+        ) : null}
+        <RegText style={{ marginBottom: 60 }}>
           It is a long established fact that a reader will be distracted by the
           readable content of a page when looking at its layout. The point of
           using Lorem Ipsum is that it has a more-or-less normal distribution of
@@ -252,7 +263,7 @@ const MessagesEntryScreen = ({ route, navigation }) => {
           uncover many web sites still in their infancy. Various versions have
           evolved over the years, sometimes by accident, sometimes on purpose
           (injected humour and the like).
-        </DetailsText>
+        </RegText>
         <ResponseButton
           disabled={responseType ? false : true}
           responseButtonStatus={responseButtonStatus}

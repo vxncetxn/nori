@@ -38,13 +38,13 @@ const MessageTitle = styled.Text`
   color: ${props => props.theme.colorText};
   font-size: 20px;
   font-family: "${props => props.theme.fontPrimary}";
-  margin-bottom: 20px;
 `;
 
 const MessageDate = styled.Text`
   color: ${props => props.theme.colorText};
   font-size: 14px;
   font-family: "${props => props.theme.fontSecondary}";
+  margin-top: 20px;
 `;
 
 const MessageAction = styled.Text`
@@ -55,7 +55,8 @@ const MessageAction = styled.Text`
 `;
 
 const MessageComp = ({ onPress, datum, ...others }) => {
-  const { createdDate, type, title, response } = datum;
+  const { targetDetails, type, title, response } = datum;
+  const { targetDate, targetDateType } = targetDetails;
   const { responseType, responded } = response;
   const theme = useContext(ThemeContext);
 
@@ -77,7 +78,13 @@ const MessageComp = ({ onPress, datum, ...others }) => {
         </MessageTypeBadge> */}
       </MessageBadgeRow>
       <MessageTitle>{title}</MessageTitle>
-      <MessageDate>Posted {formatDistanceToNow(createdDate)} ago</MessageDate>
+      {targetDateType === "occurence" ? (
+        <MessageDate>
+          Happening {formatDistanceToNow(targetDate)} later
+        </MessageDate>
+      ) : targetDateType === "deadline" ? (
+        <MessageDate>Due {formatDistanceToNow(targetDate)} later</MessageDate>
+      ) : null}
       {!responded &&
         (responseType === "Acknowledgement" ? (
           <MessageAction>

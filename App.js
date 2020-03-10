@@ -9,10 +9,9 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { SimpleLineIcons, FontAwesome } from "@expo/vector-icons";
 import { AppearanceProvider, useColorScheme } from "react-native-appearance";
 
-// import MessagesScreen from "./src/screens/MessagesScreen";
 import MessagesStack from "./src/MessagesStack";
 import ProgressScreen from "./src/screens/ProgressScreen";
-import HappeningsScreen from "./src/screens/HappeningsScreen";
+import HappeningsStack from "./src//HappeningsStack";
 import ChatScreen from "./src/screens/ChatScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
 
@@ -144,7 +143,7 @@ export default function App() {
           >
             <Tab.Screen name="Messages" component={MessagesStack} />
             <Tab.Screen name="Progress" component={ProgressScreen} />
-            <Tab.Screen name="Happenings" component={HappeningsScreen} />
+            <Tab.Screen name="Happenings" component={HappeningsStack} />
             <Tab.Screen name="Chat" component={ChatScreen} />
             <Tab.Screen name="Settings" component={SettingsScreen} />
           </Tab.Navigator>
