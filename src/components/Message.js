@@ -55,9 +55,7 @@ const MessageAction = styled.Text`
 `;
 
 const MessageComp = ({ onPress, datum, ...others }) => {
-  const { targetDetails, type, title, response } = datum;
-  const { targetDate, targetDateType } = targetDetails;
-  const { responseType, responded } = response;
+  const { target, type, title, response } = datum;
   const theme = useContext(ThemeContext);
 
   return (
@@ -78,33 +76,26 @@ const MessageComp = ({ onPress, datum, ...others }) => {
         </MessageTypeBadge> */}
       </MessageBadgeRow>
       <MessageTitle>{title}</MessageTitle>
-      {targetDateType === "occurence" ? (
+      {target.dateType === "occurence" ? (
         <MessageDate>
-          Happening {formatDistanceToNow(targetDate)} later
+          Happening {formatDistanceToNow(new Date(target.date))} later
         </MessageDate>
-      ) : targetDateType === "deadline" ? (
-        <MessageDate>Due {formatDistanceToNow(targetDate)} later</MessageDate>
+      ) : target.dateType === "deadline" ? (
+        <MessageDate>
+          Due {formatDistanceToNow(new Date(target.date))} later
+        </MessageDate>
       ) : null}
-      {!responded &&
-        (responseType === "Acknowledgement" ? (
-          <MessageAction>
-            <FontAwesome
-              name="exclamation"
-              size={12}
-              color={theme.colorAccent}
-            />{" "}
-            Acknowledgement Required
-          </MessageAction>
-        ) : responseType === "Consent" ? (
-          <MessageAction>
-            <FontAwesome
-              name="exclamation"
-              size={12}
-              color={theme.colorAccent}
-            />{" "}
-            Consent Required
-          </MessageAction>
-        ) : null)}
+      {response.type === "acknowledgement" ? (
+        <MessageAction>
+          <FontAwesome name="exclamation" size={12} color={theme.colorAccent} />{" "}
+          Acknowledgement Required
+        </MessageAction>
+      ) : response.type === "consent" ? (
+        <MessageAction>
+          <FontAwesome name="exclamation" size={12} color={theme.colorAccent} />{" "}
+          Consent Required
+        </MessageAction>
+      ) : null}
     </Message>
   );
 };

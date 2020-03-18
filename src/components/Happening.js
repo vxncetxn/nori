@@ -46,14 +46,14 @@ const HappeningTypeBadge = styled(Badge)`
 `;
 
 const HappeningTitle = styled.Text`
-color: ${props => props.theme.colorText};
+color: ${props => props.theme.colorWhite};
 font-size: 20px;
 font-family: "${props => props.theme.fontPrimary}";
 margin-bottom: 20px;
 `;
 
 const HappeningDate = styled.Text`
-  color: ${props => props.theme.colorText};
+  color: ${props => props.theme.colorWhite};
   font-size: 14px;
   font-family: "${props => props.theme.fontSecondary}";
 `;

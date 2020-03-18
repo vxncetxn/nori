@@ -2,6 +2,9 @@ import React, { useContext } from "react";
 import styled, { ThemeContext } from "styled-components";
 import { SimpleLineIcons, FontAwesome } from "@expo/vector-icons";
 import { format, formatDistanceToNow } from "date-fns";
+import { LinearGradient } from "expo-linear-gradient";
+
+import { IdentityContext, DataContext } from "../Context";
 
 import Badge from "../components/Badge";
 import RegText from "../components/RegText";
@@ -15,13 +18,22 @@ const MessagesEntry = styled.ScrollView`
 const Hero = styled.View`
   background-color: ${props => props.theme.colorAccent};
   border-bottom-right-radius: 50px;
-  padding: 40px 20px 20px 20px;
+  padding: 35px 20px 20px 20px;
+  overflow: hidden;
+`;
+
+const ImageTint = styled(LinearGradient)`
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
 `;
 
 const ToolsRow = styled.View`
   flex-direction: row;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 100px;
 `;
 
 const ToolButton = styled.TouchableOpacity``;
@@ -53,7 +65,7 @@ const MessageTypeBadge = styled(Badge)`
 const HeroTitle = styled.Text`
   font-family: "${props => props.theme.fontPrimary}";
   font-size: 36px;
-  color: ${props => props.theme.colorBg};
+  color: ${props => props.theme.colorWhite};
   margin-bottom: 20px;
 `;
 
@@ -76,19 +88,19 @@ const OtherInfoContent = styled.View`
 const PublisherText = styled.Text`
   font-family: "${props => props.theme.fontSecondary}";
   font-size: 18px;
-  color: ${props => props.theme.colorBg};
+  color: ${props => props.theme.colorWhite};
   margin-left: 20px
 `;
 
 const DateText = styled.Text`
   font-family: "${props => props.theme.fontSecondary}";
   font-size: 18px;
-  color: ${props => props.theme.colorBg};
+  color: ${props => props.theme.colorWhite};
   margin-left: 20px
 `;
 
 const MainContent = styled.View`
-  padding: 40px 20px 60px 20px;
+  padding: 40px 20px;
 `;
 
 const TargetDateText = styled.Text`
@@ -123,60 +135,124 @@ const ResponseButtonLabel = styled.Text`
   color: ${props => props.theme.colorBg};
 `;
 
+const ResponseList = styled.View``;
+
+const ResponseListItem = styled.View`
+  margin-bottom: 15px;
+`;
+
+const ParentsRow = styled.View`
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: 20px;
+`;
+
+const ChildrenRow = styled.View`
+  flex-direction: row;
+  align-items: center;
+  margin-left: 15px;
+  padding-left: 40px;
+  padding-vertical: 5px;
+`;
+
+const ResponseListImage = styled.Image`
+  width: 35px;
+  height: 35px;
+  border-radius: 35px;
+  margin-right: 10px;
+`;
+
+const TempText = styled.Text`
+  font-family: "${props => props.theme.fontSecondary}";
+  font-size: 18px;
+  color: ${props => {
+    switch (props.status) {
+      case "positive":
+        return props.theme.colorGreen;
+      case "negative":
+        return props.theme.colorRed;
+      default:
+        return "#808080";
+    }
+  }};
+`;
+
+const Thread = styled.View`
+  position: absolute;
+  top: ${props => (props.first ? "-20%" : "-70%")};
+  bottom: 50%;
+  width: 30px;
+  border-left-color: #808080;
+  border-left-width: 2px;
+  border-bottom-color: #808080;
+  border-bottom-width: 2px;
+  border-bottom-left-radius: 8px;
+`;
+
 const MessagesEntryScreen = ({ route, navigation }) => {
-  let {
-    createdDate,
-    targetDetails,
-    type,
-    title,
-    publisher,
-    response
-  } = route.params;
-  createdDate = JSON.parse(createdDate);
-  const { targetDate, targetDateType, targetLocation } = JSON.parse(
-    targetDetails
-  );
-  const { publisherName, publisherPic } = publisher;
-  const { responseType, deadline, responded } = JSON.parse(response);
+  const identity = useContext(IdentityContext);
+  const { teachers, parents, children } = useContext(DataContext);
+
+  let { createdDate, target, type, title, publisher, response } = route.params;
 
   let responseAlertPresent;
   let responseAlertString;
+  let responseButtonPresent;
   let responseButtonStatus;
   let responseButtonLabelString;
-  if (responded) {
-    if (responseType === "Acknowledgement") {
+  let responseListPresent;
+  if (identity.status === "parent") {
+    responseListPresent = false;
+    responseButtonPresent = true;
+
+    if (response.responded) {
       responseAlertPresent = false;
       responseAlertString = "";
-      responseButtonStatus = "complete";
-      responseButtonLabelString = "Acknowledged";
-    } else if (responseType === "Consent") {
-      responseAlertPresent = false;
-      responseAlertString = "";
-      responseButtonStatus = "complete";
-      responseButtonLabelString = "Consent Given";
+
+      if (response.type === "acknowledgement") {
+        responseButtonStatus = "complete";
+        responseButtonLabelString = "Acknowledged";
+      } else if (response.type === "consent") {
+        responseButtonStatus = "complete";
+        responseButtonLabelString = "Consent Given";
+      }
+    } else {
+      if (response.type === "acknowledgement") {
+        responseAlertPresent = true;
+        responseAlertString = `You have to acknowledge by ${format(
+          new Date(response.deadline),
+          "do LLLL yyyy"
+        )}`;
+        responseButtonStatus = "pending";
+        responseButtonLabelString = "Acknowledge";
+      } else if (response.type === "consent") {
+        responseAlertPresent = true;
+        responseAlertString = `You have to give consent by ${format(
+          new Date(response.deadline),
+          "do LLLL yyyy"
+        )}`;
+        responseButtonStatus = "pending";
+        responseButtonLabelString = "Give Consent";
+      } else {
+        responseAlertPresent = false;
+        responseAlertString = "";
+        responseButtonStatus = "inactive";
+        responseButtonLabelString = "No Response Required";
+      }
     }
   } else {
-    if (responseType === "Acknowledgement") {
-      responseAlertPresent = true;
-      responseAlertString = `You have to acknowledge by ${format(
-        new Date(deadline),
-        "do LLLL yyyy"
-      )}`;
-      responseButtonStatus = "pending";
-      responseButtonLabelString = "Acknowledge";
-    } else if (responseType === "Consent") {
-      responseAlertPresent = true;
-      responseAlertString = `You have to give consent by ${format(
-        new Date(deadline),
-        "do LLLL yyyy"
-      )}`;
-      responseButtonStatus = "pending";
-      responseButtonLabelString = "Give Consent";
+    responseButtonPresent = false;
+    responseButtonStatus = "";
+    responseButtonLabelString = "";
+
+    if (response.type) {
+      responseAlertPresent = false;
+      responseAlertString = "";
+      responseListPresent = true;
     } else {
       responseAlertPresent = false;
       responseAlertString = "";
-      responseButtonStatus = "inactive";
-      responseButtonLabelString = "No Response Required";
+      responseListPresent = false;
     }
   }
 
@@ -185,6 +261,9 @@ const MessagesEntryScreen = ({ route, navigation }) => {
   return (
     <MessagesEntry>
       <Hero>
+        <ImageTint
+          colors={["rgba(0, 0, 0, 0.3)", "rgba(0, 0, 0, 1)"]}
+        ></ImageTint>
         <ToolsRow>
           <ToolButton
             onPress={() => navigation.navigate("Messages")}
@@ -216,9 +295,11 @@ const MessagesEntryScreen = ({ route, navigation }) => {
         </MessageBadgeRow>
         <HeroTitle>{title}</HeroTitle>
         <OtherInfoRow>
-          <PublisherImage source={publisherPic} />
+          <PublisherImage source={{ uri: teachers.get(publisher).picture }} />
           <OtherInfoContent>
-            <PublisherText>{publisherName}</PublisherText>
+            <PublisherText>
+              {teachers.get(publisher).referredName}
+            </PublisherText>
             <DateText>
               Posted {formatDistanceToNow(new Date(createdDate))} ago
             </DateText>
@@ -236,21 +317,21 @@ const MessagesEntryScreen = ({ route, navigation }) => {
             {responseAlertString}
           </AccentedText>
         ) : null}
-        {targetDate ? (
+        {target.dateType ? (
           <TargetDateText>
             <AccentedText>
-              {targetDateType === "occurence" ? "Happening on" : "Due on"}:{" "}
+              {target.dateType === "occurence" ? "Happening on" : "Due on"}:{" "}
             </AccentedText>
-            <RegText>{format(new Date(targetDate), "do LLLL yyyy")}</RegText>
+            <RegText>{format(new Date(target.date), "do LLLL yyyy")}</RegText>
           </TargetDateText>
         ) : null}
-        {targetLocation ? (
+        {target.location ? (
           <LocationText>
             <AccentedText>Location: </AccentedText>
-            <RegText>{targetLocation}</RegText>
+            <RegText>{target.location}</RegText>
           </LocationText>
         ) : null}
-        <RegText style={{ marginBottom: 60 }}>
+        <RegText>
           It is a long established fact that a reader will be distracted by the
           readable content of a page when looking at its layout. The point of
           using Lorem Ipsum is that it has a more-or-less normal distribution of
@@ -264,12 +345,127 @@ const MessagesEntryScreen = ({ route, navigation }) => {
           evolved over the years, sometimes by accident, sometimes on purpose
           (injected humour and the like).
         </RegText>
-        <ResponseButton
-          disabled={responseType ? false : true}
-          responseButtonStatus={responseButtonStatus}
-        >
-          <ResponseButtonLabel>{responseButtonLabelString}</ResponseButtonLabel>
-        </ResponseButton>
+        {responseButtonPresent ? (
+          <ResponseButton
+            style={{ marginTop: 60 }}
+            disabled={response.type ? false : true}
+            responseButtonStatus={responseButtonStatus}
+          >
+            <ResponseButtonLabel>
+              {responseButtonLabelString}
+            </ResponseButtonLabel>
+          </ResponseButton>
+        ) : null}
+        {responseListPresent &&
+          (() => {
+            const responseArr = Object.entries(response.responded);
+
+            return (
+              <>
+                <AccentedText style={{ marginVertical: 20 }}>
+                  Response {responseArr.filter(d => d[1]).length}/
+                  {responseArr.length}:{" "}
+                </AccentedText>
+                <ResponseList>
+                  {responseArr.map(d => {
+                    const parentsArr = parents.get(d[0]).parents;
+                    const childrenArr = parents
+                      .get(d[0])
+                      .children.map(id => children.get(id));
+
+                    return (
+                      <ResponseListItem key={d[0]}>
+                        <ParentsRow>
+                          <ResponseListImage
+                            source={{ uri: parentsArr[0].picture }}
+                          />
+                          {parentsArr.length > 1 && (
+                            <ResponseListImage
+                              source={{ uri: parentsArr[1].picture }}
+                            />
+                          )}
+                          <RegText>{parentsArr[0].referredName}</RegText>
+                          <RegText>
+                            {parentsArr.length > 1 &&
+                              ` and ${parentsArr[1].referredName}`}
+                          </RegText>
+                          <TempText status={"positive"}>
+                            {" "}
+                            {d[1] === "positive"
+                              ? "✓"
+                              : d[1] === "negative"
+                              ? "✗"
+                              : null}
+                          </TempText>
+                        </ParentsRow>
+                        {childrenArr.map((child, idx) => {
+                          return (
+                            <ChildrenRow key={child.name}>
+                              <Thread first={idx === 0} />
+                              <ResponseListImage
+                                source={require("../../assets/images/child-profile-stock.jpg")}
+                              />
+                              <RegText>{child.referredName}</RegText>
+                            </ChildrenRow>
+                          );
+                        })}
+                      </ResponseListItem>
+                    );
+                  })}
+                </ResponseList>
+              </>
+            );
+          })()}
+        {/* {responseListPresent && (
+          <>
+            <AccentedText style={{ marginVertical: 20 }}>
+              Response 13/{Object.entries(response.responded).length}:{" "}
+            </AccentedText>
+            <ResponseList>
+              {Object.entries(response.responded).map(d => {
+                const parentsArr = parents.get(d[0]).parents;
+                const childrenArr = parents
+                  .get(d[0])
+                  .children.map(id => children.get(id));
+
+                return (
+                  <ResponseListItem key={d[0]}>
+                    <ParentsRow>
+                      <ResponseListImage
+                        source={{ uri: parentsArr[0].picture }}
+                      />
+                      {parentsArr.length > 1 && (
+                        <ResponseListImage
+                          source={{ uri: parentsArr[1].picture }}
+                        />
+                      )}
+                      <RegText>{parentsArr[0].referredName}</RegText>
+                      <RegText>
+                        {parentsArr.length > 1 &&
+                          ` and ${parentsArr[1].referredName}`}
+                      </RegText>
+                      <TempText status={"positive"}>
+                        {" "}
+                        {d[1] === "" ? "✓" : d[1] === "negative" ? "✗" : null}
+                      </TempText>
+                    </ParentsRow>
+                    {childrenArr.map((child, idx) => {
+                      return (
+                        <ChildrenRow key={child.name}>
+                          <Thread first={idx === 0} />
+                          <ResponseListImage
+                            source={require("../../assets/images/child-profile-stock.jpg")}
+                          />
+                          <RegText>{child.referredName}</RegText>
+                        </ChildrenRow>
+                      );
+                    })}
+                  </ResponseListItem>
+                );
+              })}
+            </ResponseList>
+          </>
+        )} */}
       </MainContent>
     </MessagesEntry>
   );

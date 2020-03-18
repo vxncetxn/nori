@@ -6,8 +6,11 @@ import { AppLoading } from "expo";
 import styled, { ThemeProvider } from "styled-components";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { SimpleLineIcons, FontAwesome } from "@expo/vector-icons";
+import { SimpleLineIcons } from "@expo/vector-icons";
 import { AppearanceProvider, useColorScheme } from "react-native-appearance";
+import { db, storage } from "./src/firebase";
+
+import { IdentityContext, DataContext } from "./src/Context";
 
 import MessagesStack from "./src/MessagesStack";
 import ProgressScreen from "./src/screens/ProgressScreen";
@@ -42,7 +45,142 @@ const cacheImages = images => {
 };
 
 export default function App() {
-  const colorScheme = useColorScheme();
+  const [identity, setIdentity] = useState({
+    id: "awolLVcPcd64t8zEjLa9",
+    status: "teacher",
+    name: "Tan Xuan Rong Vance",
+    referredName: "Mr Tan",
+    class: ["K1A", "K2B"],
+    children: [
+      {
+        fullName: "Jayden Tan Kai Fong",
+        referredName: "Jayden",
+        class: "K1A"
+      },
+      {
+        fullName: "Kayfen Tan Kai Jing",
+        referredName: "Kayfen",
+        class: "K2B"
+      }
+    ]
+  });
+
+  const [messages, setMessages] = useState([]);
+  const [messagesStatus, setMessagesStatus] = useState("fetching");
+  const [teachers, setTeachers] = useState({});
+  const [teachersStatus, setTeachersStatus] = useState("fetching");
+  const [parents, setParents] = useState({});
+  const [parentsStatus, setParentsStatus] = useState("fetching");
+  const [children, setChildren] = useState({});
+  const [childrenStatus, setChildrenStatus] = useState("fetching");
+
+  useEffect(() => {
+    db.collection("messages")
+      .where("recipients", "array-contains-any", identity.class)
+      .get()
+      .then(querySnapshot => {
+        const fetchedMessages = [];
+        querySnapshot.forEach(doc => {
+          const messageData = doc.data();
+          const { createdDate, response, target } = messageData;
+
+          fetchedMessages.push({
+            ...messageData,
+            id: doc.id,
+            createdDate: createdDate.toDate(),
+            response: {
+              type: response.type,
+              responded:
+                identity.status === "parent"
+                  ? response.responded[identity.id]
+                    ? true
+                    : false
+                  : response.responded,
+              deadline: response.deadline.toDate()
+            },
+            target: {
+              ...target,
+              date: target.date.toDate()
+            }
+          });
+        });
+
+        setMessages(fetchedMessages);
+      })
+      .catch(err => console.log("Error: ", err));
+
+    db.collection("teachers")
+      .get()
+      .then(querySnapshot => {
+        const teachersMap = new Map();
+        querySnapshot.forEach(doc => {
+          const teacherData = doc.data();
+
+          storage
+            .child(teacherData.picture)
+            .getDownloadURL()
+            .then(url => {
+              teachersMap.set(doc.id, { ...teacherData, picture: url });
+            })
+            .catch(err =>
+              console.log("Error in setting Teachers pictures: ", err)
+            );
+        });
+
+        setTeachers(teachersMap);
+        console.log(teachers.get("Bktjwa0eYtOAJzTF5jU7").picture);
+      })
+      .catch(err => console.log("Error in fetching Teachers: ", err));
+
+    db.collection("parents")
+      .get()
+      .then(querySnapshot => {
+        const parentsMap = new Map();
+        querySnapshot.forEach(doc => {
+          const parentsData = doc.data();
+
+          Promise.all(
+            parentsData.parents.map(parent =>
+              storage.child(parent.picture).getDownloadURL()
+            )
+          )
+            .then(urls => {
+              parentsMap.set(doc.id, {
+                ...parentsData,
+                parents: parentsData.parents.map((parent, idx) => {
+                  return {
+                    ...parent,
+                    picture: urls[idx]
+                  };
+                })
+              });
+            })
+            .catch(err =>
+              console.log("Error in setting Parents pictures: ", err)
+            );
+        });
+
+        setParents(parentsMap);
+      })
+      .catch(err => console.log("Error in fetching Parents: ", err));
+
+    db.collection("children")
+      .get()
+      .then(querySnapshot => {
+        const childrenMap = new Map();
+        querySnapshot.forEach(doc => {
+          const childData = doc.data();
+
+          childrenMap.set(doc.id, childData);
+        });
+
+        setChildren(childrenMap);
+      })
+      .catch(err => console.log("Error in fetching Children: ", err));
+  }, []);
+
+  // const colorScheme = useColorScheme();
+  const colorScheme = "dark";
   const theme = {
     fontPrimary: "Techna Sans",
     fontSecondary: "Inter Medium",
@@ -95,58 +233,68 @@ export default function App() {
     <ThemeProvider theme={theme}>
       <AppearanceProvider>
         <NavigationContainer>
-          <Tab.Navigator
-            screenOptions={({ route }) => ({
-              tabBarIcon: ({ focused, color, size }) => {
-                let iconName;
+          <IdentityContext.Provider value={identity}>
+            <DataContext.Provider
+              value={{ messages, teachers, parents, children }}
+            >
+              <Tab.Navigator
+                screenOptions={({ route }) => ({
+                  tabBarIcon: ({ focused, color, size }) => {
+                    let iconName;
 
-                switch (route.name) {
-                  case "Messages":
-                    iconName = "notebook";
-                    break;
-                  case "Progress":
-                    iconName = "chart";
-                    break;
-                  case "Happenings":
-                    iconName = "chart";
-                    break;
-                  case "Chat":
-                    iconName = "speech";
-                    break;
-                  case "Settings":
-                    iconName = "settings";
-                    break;
-                }
+                    switch (route.name) {
+                      case "Messages":
+                        iconName = "notebook";
+                        break;
+                      case "Progress":
+                        iconName = "chart";
+                        break;
+                      case "Happenings":
+                        iconName = "chart";
+                        break;
+                      case "Chat":
+                        iconName = "speech";
+                        break;
+                      case "Settings":
+                        iconName = "settings";
+                        break;
+                    }
 
-                return (
-                  <IconWrapper>
-                    <SimpleLineIcons name={iconName} size={20} color={color} />
-                    {pending[route.name] ? (
-                      <PendingBubble>{pending[route.name]}</PendingBubble>
-                    ) : null}
-                  </IconWrapper>
-                );
-              }
-            })}
-            tabBarOptions={{
-              activeTintColor: theme.colorAccent,
-              inactiveTintColor: "#808080",
-              style: {
-                backgroundColor: theme.colorBgNav,
-                borderTopColor: "transparent"
-              },
-              labelStyle: {
-                fontFamily: theme.fontSecondary,
-                fontSize: 10
-              }
-            }}
-          >
-            <Tab.Screen name="Messages" component={MessagesStack} />
-            <Tab.Screen name="Progress" component={ProgressScreen} />
-            <Tab.Screen name="Happenings" component={HappeningsStack} />
-            <Tab.Screen name="Chat" component={ChatScreen} />
-            <Tab.Screen name="Settings" component={SettingsScreen} />
-          </Tab.Navigator>
+                    return (
+                      <IconWrapper>
+                        <SimpleLineIcons
+                          name={iconName}
+                          size={20}
+                          color={color}
+                        />
+                        {pending[route.name] ? (
+                          <PendingBubble>{pending[route.name]}</PendingBubble>
+                        ) : null}
+                      </IconWrapper>
+                    );
+                  }
+                })}
+                tabBarOptions={{
+                  activeTintColor: theme.colorAccent,
+                  inactiveTintColor: "#808080",
+                  style: {
+                    backgroundColor: theme.colorBgNav,
+                    borderTopColor: "transparent"
+                  },
+                  labelStyle: {
+                    fontFamily: theme.fontSecondary,
+                    fontSize: 10
+                  }
+                }}
+              >
+                <Tab.Screen name="Messages" component={MessagesStack} />
+                <Tab.Screen name="Progress" component={ProgressScreen} />
+                <Tab.Screen name="Happenings" component={HappeningsStack} />
+                <Tab.Screen name="Chat" component={ChatScreen} />
+                <Tab.Screen name="Settings" component={SettingsScreen} />
+              </Tab.Navigator>
+            </DataContext.Provider>
+          </IdentityContext.Provider>
         </NavigationContainer>
       </AppearanceProvider>
     </ThemeProvider>

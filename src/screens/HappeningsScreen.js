@@ -4,6 +4,7 @@ import { Dimensions } from "react-native";
 
 import MasonryGrid from "../components/MasonryGrid";
 import Happening from "../components/Happening";
+import ImageTint from "../components/ImageTint";
 
 import { SimpleLineIcons } from "@expo/vector-icons";
 
@@ -12,41 +13,42 @@ const Happenings = styled.ScrollView`
   height: auto;
 `;
 
-const Hero = styled.View`
+const Hero = styled.ImageBackground`
   flex-direction: row;
   height: 205px;
-  height: ${Dimensions.get("window").height * 0.3}px;
+  height: ${Dimensions.get("window").height * 0.4}px;
   background-color: ${props => props.theme.colorAccent};
   border-bottom-right-radius: 50px;
   padding: 40px 20px 20px 20px;
+`;
+
+const HeroImage = styled.Image`
+  position: absolute;
+  right: -15%;
+  bottom: 0;
+  width: 100%;
+  height: ${Dimensions.get("window").height * 0.4}px;
 `;
 
 const HeroContent = styled.View`
   width: 60%;
 `;
 
-const HeroImage = styled.Image`
-  position: absolute;
-  right: -5%;
-  top: 0;
-  width: 80%;
-  height: ${Dimensions.get("window").height * 0.3}px;
-`;
-
 const HeroTitle = styled.Text`
   font-family: "${props => props.theme.fontPrimary}";
-  font-size: 36px;
-  color: ${props => props.theme.colorBg};
+  font-size: 42px;
+  color: ${props => props.theme.colorWhite};
   margin-bottom: auto;
 `;
 
 const Tools = styled.View`
   height: 50%;
-  justify-content: space-between;
+  justify-content: flex-end;
 `;
 
 const SearchBarWrapper = styled.View`
   width: 100%;
+  margin-bottom: 20px;
 `;
 
 const SearchBarIcon = styled(SimpleLineIcons)`
@@ -123,6 +125,7 @@ const HappeningsScreen = ({ navigation }) => {
         <HeroImage
           source={require("../../assets/images/happenings-hero.png")}
         />
+        <ImageTint />
         <HeroContent>
           <HeroTitle>Happenings</HeroTitle>
           <Tools>

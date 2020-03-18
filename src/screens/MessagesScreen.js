@@ -1,9 +1,12 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useContext } from "react";
 import styled from "styled-components";
 import { Dimensions } from "react-native";
 import Animated from "react-native-reanimated";
 import { SimpleLineIcons } from "@expo/vector-icons";
 
+import { IdentityContext, DataContext } from "../Context";
+
+import ImageTint from "../components/ImageTint";
 import MasonryGrid from "../components/MasonryGrid";
 import Message from "../components/Message";
 import Badge from "../components/Badge";
@@ -19,12 +22,13 @@ const Messages = styled.ScrollView`
   height: auto;
 `;
 
-const Hero = styled.View`
+const Hero = styled.ImageBackground`
   flex-direction: row;
-  height: ${Dimensions.get("window").height * 0.3}px;
+  height: ${Dimensions.get("window").height * 0.4}px;
   background-color: ${props => props.theme.colorAccent};
   border-bottom-right-radius: 50px;
   padding: 40px 20px 20px 20px;
+  overflow: hidden;
 `;
 
 const HeroContent = styled.View`
@@ -34,25 +38,26 @@ const HeroContent = styled.View`
 const HeroImage = styled.Image`
   position: absolute;
   right: -5%;
-  top: 0;
-  width: 80%;
-  height: ${Dimensions.get("window").height * 0.3}px;
+  bottom: 0;
+  width: 100%;
+  height: ${Dimensions.get("window").height * 0.4}px;
 `;
 
 const HeroTitle = styled.Text`
   font-family: "${props => props.theme.fontPrimary}";
-  font-size: 36px;
-  color: ${props => props.theme.colorBg};
+  font-size: 42px;
+  color: ${props => props.theme.colorWhite};
   margin-bottom: auto;
 `;
 
 const Tools = styled.View`
   height: 50%;
-  justify-content: space-between;
+  justify-content: flex-end;
 `;
 
 const SearchBarWrapper = styled.View`
   width: 100%;
+  margin-bottom: 20px;
 `;
 
 const SearchBarIcon = styled(SimpleLineIcons)`
@@ -68,6 +73,7 @@ const SearchBar = styled.TextInput`
   padding: 10px 35px;
   font-family: "${props => props.theme.fontSecondary}";
   font-size: 14px;
+  color: ${props => props.theme.colorBg};
 `;
 
 const ButtonsRow = styled.View`
@@ -158,130 +164,29 @@ const Overlay = styled(Animated.View)`
   right: 0;
 `;
 
-const data = [
-  {
-    createdDate: new Date(2020, 2, 1),
-    targetDetails: {
-      targetDate: new Date(2020, 2, 21),
-      targetDateType: "occurence",
-      targetLocation: null
-    },
-    type: "Notice",
-    title: "School cancelled on 21st March for spring cleaning",
-    publisher: {
-      publisherName: "Ms Chen",
-      publisherPic: require("../../assets/images/profile-stock-one.jpg")
-    },
-    response: {
-      responseType: "Acknowledgement",
-      deadline: new Date(2020, 3, 20),
-      responded: false
-    }
-  },
-  {
-    createdDate: new Date(2020, 2, 5),
-    targetDetails: {
-      targetDate: new Date(2020, 3, 4),
-      targetDateType: "occurence",
-      targetLocation: "1018 East Coast Parkway, Singapore 449877"
-    },
-    type: "Event",
-    title: "Excursion to East Coast Beach on 4th April 2020",
-    publisher: {
-      publisherName: "Mr Lim",
-      publisherPic: require("../../assets/images/profile-stock-two.jpg")
-    },
-    response: {
-      responseType: "Consent",
-      deadline: new Date(2020, 3, 29),
-      responded: true
-    }
-  },
-  {
-    createdDate: new Date(2020, 2, 10),
-    targetDetails: {
-      targetDate: null,
-      targetDateType: null,
-      targetLocation: null
-    },
-    type: "Notice",
-    title:
-      "Excursion to Singapore Zoo on 15th March 2020 cancelled due to COVID-19",
-    publisher: {
-      publisherName: "Mr Lim",
-      publisherPic: require("../../assets/images/profile-stock-two.jpg")
-    },
-    response: {
-      responseType: "",
-      deadline: null,
-      responded: null
-    }
-  },
-  {
-    createdDate: new Date(2020, 2, 24),
-    targetDetails: {
-      targetDate: null,
-      targetDateType: null,
-      targetLocation: null
-    },
-    type: "Notice",
-    title: "Sign up for Art-4-Good Competition",
-    publisher: {
-      publisherName: "Mdm Teo",
-      publisherPic: require("../../assets/images/profile-stock-three.jpg")
-    },
-    response: {
-      responseType: "",
-      deadline: null,
-      responded: null
-    }
-  },
-  {
-    createdDate: new Date(2020, 2, 2),
-    targetDetails: {
-      targetDate: new Date(2020, 3, 22),
-      targetDateType: "occurence",
-      targetLocation:
-        "1 Fifth Ave, #02-01/02/03/04 Guthrie House, Singapore 268802"
-    },
-    type: "Event",
-    title: "Learning journey to Singapore Origami Center on 4th April 2020",
-    publisher: {
-      publisherName: "Mr Lim",
-      publisherPic: require("../../assets/images/profile-stock-two.jpg")
-    },
-    response: {
-      responseType: "Consent",
-      deadline: new Date(2020, 4, 19),
-      responded: false
-    }
-  },
-  {
-    createdDate: new Date(2020, 3, 1),
-    targetDetails: {
-      targetDate: new Date(2020, 2, 31),
-      targetDateType: "deadline",
-      targetLocation: null
-    },
-    type: "Admin",
-    title: "School fees for March 2020",
-    publisher: {
-      publisherName: "Ms Chen",
-      publisherPic: require("../../assets/images/profile-stock-one.jpg")
-    },
-    response: {
-      responseType: "Acknowledgement",
-      deadline: new Date(2020, 3, 20),
-      responded: true
-    }
-  }
-];
-
 const MessagesScreen = ({ navigation }) => {
+  const identity = useContext(IdentityContext);
+  const { messages } = useContext(DataContext);
+
   const bsRef = useRef();
   const bsAnimNode = useRef(new Animated.Value(1));
 
+  const [searchQuery, setSearchQuery] = useState("");
   const [changesMade, setChangesMade] = useState(false);
+
+  // Start Filters Test
+  const filterObj = {
+    Notice: true,
+    Event: true,
+    Admin: true
+  };
+  identity.children.length > 1 &&
+    identity.children.forEach(child => {
+      filterObj[child.referredName] = true;
+    });
+  const [testFilters, setTestFilters] = useState(filterObj);
+  // End Filters Test
+
   const [appliedFilters, setAppliedFilters] = useState({
     Notice: true,
     Event: true,
@@ -294,6 +199,39 @@ const MessagesScreen = ({ navigation }) => {
     Admin: true
   });
   const [pendingSort, setPendingSort] = useState("Most Recent First");
+
+  const organiseData = data => {
+    let organised = JSON.parse(JSON.stringify(data));
+    const loweredSearchQuery = searchQuery.toLowerCase();
+
+    if (loweredSearchQuery) {
+      organised = organised.filter(d =>
+        d.title.toLowerCase().includes(loweredSearchQuery)
+      );
+    }
+
+    organised = organised.filter(d => {
+      let included;
+
+      switch (d.type) {
+        case "Notice":
+          included = appliedFilters["Notice"] ? true : false;
+          break;
+        case "Event":
+          included = appliedFilters["Event"] ? true : false;
+          break;
+        case "Admin":
+          included = appliedFilters["Admin"] ? true : false;
+          break;
+        default:
+          included = false;
+      }
+
+      return included;
+    });
+
+    return organised;
+  };
 
   return (
     <ScreenWrapper>
@@ -311,6 +249,7 @@ const MessagesScreen = ({ navigation }) => {
             <HeroImage
               source={require("../../assets/images/messages-hero.png")}
             />
+            <ImageTint />
             <HeroContent>
               <HeroTitle>Messages</HeroTitle>
               <Tools>
@@ -318,6 +257,8 @@ const MessagesScreen = ({ navigation }) => {
                   <SearchBar
                     placeholder="Search"
                     placeholderTextColor="#bfbfbf"
+                    onChangeText={text => setSearchQuery(text)}
+                    value={searchQuery}
                   />
                   <SearchBarIcon name="magnifier" size={15} color={"grey"} />
                 </SearchBarWrapper>
@@ -342,18 +283,11 @@ const MessagesScreen = ({ navigation }) => {
             style={{ paddingRight: 20, paddingBottom: 20, paddingLeft: 20 }}
             cols={2}
             gap={20}
-            data={data}
+            data={organiseData(messages)}
             childGenFunc={d => (
               <Message
                 key={d.title}
-                onPress={() =>
-                  navigation.navigate("MessagesEntry", {
-                    ...d,
-                    createdDate: JSON.stringify(d.createdDate),
-                    targetDetails: JSON.stringify(d.targetDetails),
-                    response: JSON.stringify(d.response)
-                  })
-                }
+                onPress={() => navigation.navigate("MessagesEntry", d)}
                 datum={d}
               />
             )}
@@ -368,7 +302,7 @@ const MessagesScreen = ({ navigation }) => {
         onCloseEnd={() => setChangesMade(false)}
       >
         <BsContentSection>
-          <BsContentSectionTitle>Filters</BsContentSectionTitle>
+          <BsContentSectionTitle>Filter by type</BsContentSectionTitle>
           <FiltersRow>
             <FiltersToggle
               onPress={() => {
@@ -411,6 +345,48 @@ const MessagesScreen = ({ navigation }) => {
             </FiltersToggle>
           </FiltersRow>
         </BsContentSection>
+        {identity.children.length > 1 && (
+          <BsContentSection>
+            <BsContentSectionTitle>Filter by child</BsContentSectionTitle>
+            <FiltersRow>
+              {identity.children.map(child => {
+                const referredName = child.referredName;
+                return (
+                  <FiltersToggle
+                    key={referredName}
+                    // onPress={() => {
+                    //   setPendingFilters({
+                    //     ...pendingFilters,
+                    //     Notice: !pendingFilters["Notice"]
+                    //   });
+                    //   setChangesMade(true);
+                    // }}
+                  >
+                    <FiltersBadge
+                      type="Others"
+                      toggled={pendingFilters[referredName]}
+                    >
+                      {referredName} {pendingFilters[referredName] ? "✓" : "✗"}
+                    </FiltersBadge>
+                  </FiltersToggle>
+                );
+              })}
+              {/* <FiltersToggle
+                onPress={() => {
+                  setPendingFilters({
+                    ...pendingFilters,
+                    Notice: !pendingFilters["Notice"]
+                  });
+                  setChangesMade(true);
+                }}
+              >
+                <FiltersBadge type="Notice" toggled={pendingFilters["Notice"]}>
+                  Notice {pendingFilters["Notice"] ? "✓" : "✗"}
+                </FiltersBadge>
+              </FiltersToggle> */}
+            </FiltersRow>
+          </BsContentSection>
+        )}
         <BsContentSection>
           <BsContentSectionTitle>Sort</BsContentSectionTitle>
           <SortOption
@@ -426,45 +402,26 @@ const MessagesScreen = ({ navigation }) => {
           </SortOption>
           <SortOption
             onPress={() => {
-              setPendingSort("Priority");
+              setPendingSort("Pending Actions First");
               setChangesMade(true);
             }}
           >
-            <SortOptionLabel selected={pendingSort === "Priority"}>
-              Priority {pendingSort === "Priority" ? "✓" : null}
+            <SortOptionLabel selected={pendingSort === "Pending Actions First"}>
+              Pending Actions First{" "}
+              {pendingSort === "Pending Actions First" ? "✓" : null}
             </SortOptionLabel>
           </SortOption>
           <SortOption
             onPress={() => {
-              setPendingSort("Notice Items First");
+              setPendingSort("Happening Soonest First");
               setChangesMade(true);
             }}
           >
-            <SortOptionLabel selected={pendingSort === "Notice Items First"}>
-              Notice Items First{" "}
-              {pendingSort === "Notice Items First" ? "✓" : null}
-            </SortOptionLabel>
-          </SortOption>
-          <SortOption
-            onPress={() => {
-              setPendingSort("Event Items First");
-              setChangesMade(true);
-            }}
-          >
-            <SortOptionLabel selected={pendingSort === "Event Items First"}>
-              Event Items First{" "}
-              {pendingSort === "Event Items First" ? "✓" : null}
-            </SortOptionLabel>
-          </SortOption>
-          <SortOption
-            onPress={() => {
-              setPendingSort("Admin Items First");
-              setChangesMade(true);
-            }}
-          >
-            <SortOptionLabel selected={pendingSort === "Admin Items First"}>
-              Admin Items First{" "}
-              {pendingSort === "Admin Items First" ? "✓" : null}
+            <SortOptionLabel
+              selected={pendingSort === "Happening Soonest First"}
+            >
+              Happening Soonest First{" "}
+              {pendingSort === "Happening Soonest First" ? "✓" : null}
             </SortOptionLabel>
           </SortOption>
         </BsContentSection>
