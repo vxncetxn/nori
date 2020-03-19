@@ -121,6 +121,8 @@ const FiltersBadge = styled(Badge)`
         return "#ff00ff";
       } else if (props.type === "Admin") {
         return "#8000ff";
+      } else {
+        return props.theme.colorAccent;
       }
     } else {
       return props.theme.colorInactiveGrey;
@@ -174,34 +176,46 @@ const MessagesScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [changesMade, setChangesMade] = useState(false);
 
-  // Start Filters Test
   const filterObj = {
     Notice: true,
     Event: true,
     Admin: true
   };
-  identity.children.length > 1 &&
-    identity.children.forEach(child => {
-      filterObj[child.referredName] = true;
-    });
-  const [testFilters, setTestFilters] = useState(filterObj);
-  // End Filters Test
+  // if (identity.status === "parent") {
+  //   identity.children.length > 1 &&
+  //     identity.children.forEach(child => {
+  //       filterObj[child.referredName] = true;
+  //     });
+  // } else {
+  //   identity.class.forEach(d => {
+  //     filterObj[d] = true;
+  //   });
+  // }
 
-  const [appliedFilters, setAppliedFilters] = useState({
-    Notice: true,
-    Event: true,
-    Admin: true
-  });
+  const [appliedFilters, setAppliedFilters] = useState(filterObj);
   const [appliedSort, setAppliedSort] = useState("Most Recent First");
-  const [pendingFilters, setPendingFilters] = useState({
-    Notice: true,
-    Event: true,
-    Admin: true
-  });
+  const [pendingFilters, setPendingFilters] = useState(filterObj);
   const [pendingSort, setPendingSort] = useState("Most Recent First");
 
+  // let filterChildrenPresent;
+  // let filterClassPresent;
+
+  // if (identity.status === "parent") {
+  //   filterClassPresent = false;
+
+  //   if (identity.children.length > 1) {
+  //     filterChildrenPresent = true;
+  //   } else {
+  //     filterChildrenPresent = false;
+  //   }
+  // } else {
+  //   filterChildrenPresent = false;
+  //   filterClassPresent = true;
+  // }
+
   const organiseData = data => {
-    let organised = JSON.parse(JSON.stringify(data));
+    // let organised = JSON.parse(JSON.stringify(data));
+    let organised = data.map(d => d);
     const loweredSearchQuery = searchQuery.toLowerCase();
 
     if (loweredSearchQuery) {
@@ -230,7 +244,80 @@ const MessagesScreen = ({ navigation }) => {
       return included;
     });
 
-    return organised;
+    switch (appliedSort) {
+      case "Most Recent First":
+        organised.sort((a, b) => b.createdDate - a.createdDate);
+        break;
+      case "Pending Actions First":
+        organised
+          .sort((a, b) => b.createdDate - a.createdDate)
+          .sort((a, b) => {
+            if (a.response.type && !b.response.type) {
+              return -1;
+            } else if (!a.response.type && b.response.type) {
+              return 1;
+            } else if (a.response.type && b.response.type) {
+              if (a.response.responded && !b.response.responded) {
+                return 1;
+              } else if (!a.response.responded && b.response.responded) {
+                return -1;
+              } else {
+                return 0;
+              }
+            } else {
+              return 0;
+            }
+          });
+        break;
+      case "Pending Responses First":
+        organised
+          .sort((a, b) => b.createdDate - a.createdDate)
+          .sort((a, b) => {
+            if (a.response.type && !b.response.type) {
+              return -1;
+            } else if (!a.response.type && b.response.type) {
+              return 1;
+            } else if (a.response.type && b.response.type) {
+              const percentResponseA =
+                Math.round(
+                  (Object.values(a.response.responded).filter(d => d).length /
+                    Object.values(a.response.responded).length) *
+                    100
+                ) / 100;
+              const percentResponseB =
+                Math.round(
+                  (Object.values(b.response.responded).filter(d => d).length /
+                    Object.values(b.response.responded).length) *
+                    100
+                ) / 100;
+
+              if (percentResponseA === 1 && !(percentResponseB === 1)) {
+                return 1;
+              } else if (!(percentResponseA === 1) && percentResponseB === 1) {
+                return -1;
+              } else {
+                return percentResponseA - percentResponseB;
+              }
+            } else {
+              return 0;
+            }
+          });
+        break;
+      default:
+        organised.sort((a, b) => {
+          if (a.target.dateType && !b.target.dateType) {
+            return -1;
+          } else if (!a.target.dateType && b.target.dateType) {
+            return 1;
+          } else if (a.target.dateType && b.target.dateType) {
+            return a.target.date - b.target.date;
+          } else {
+            return 0;
+          }
+        });
+    }
+
+    return JSON.parse(JSON.stringify(organised));
   };
 
   return (
@@ -345,7 +432,7 @@ const MessagesScreen = ({ navigation }) => {
             </FiltersToggle>
           </FiltersRow>
         </BsContentSection>
-        {identity.children.length > 1 && (
+        {/* {filterChildrenPresent && (
           <BsContentSection>
             <BsContentSectionTitle>Filter by child</BsContentSectionTitle>
             <FiltersRow>
@@ -354,13 +441,12 @@ const MessagesScreen = ({ navigation }) => {
                 return (
                   <FiltersToggle
                     key={referredName}
-                    // onPress={() => {
-                    //   setPendingFilters({
-                    //     ...pendingFilters,
-                    //     Notice: !pendingFilters["Notice"]
-                    //   });
-                    //   setChangesMade(true);
-                    // }}
+                    onPress={() => {
+                      const filterObj = { ...pendingFilters };
+                      filterObj[referredName] = !pendingFilters[referredName];
+                      setPendingFilters(filterObj);
+                      setChangesMade(true);
+                    }}
                   >
                     <FiltersBadge
                       type="Others"
@@ -371,22 +457,33 @@ const MessagesScreen = ({ navigation }) => {
                   </FiltersToggle>
                 );
               })}
-              {/* <FiltersToggle
-                onPress={() => {
-                  setPendingFilters({
-                    ...pendingFilters,
-                    Notice: !pendingFilters["Notice"]
-                  });
-                  setChangesMade(true);
-                }}
-              >
-                <FiltersBadge type="Notice" toggled={pendingFilters["Notice"]}>
-                  Notice {pendingFilters["Notice"] ? "✓" : "✗"}
-                </FiltersBadge>
-              </FiltersToggle> */}
             </FiltersRow>
           </BsContentSection>
         )}
+        {filterClassPresent && (
+          <BsContentSection>
+            <BsContentSectionTitle>Filter by class</BsContentSectionTitle>
+            <FiltersRow>
+              {identity.class.map(d => {
+                return (
+                  <FiltersToggle
+                    key={d}
+                    onPress={() => {
+                      const filterObj = { ...pendingFilters };
+                      filterObj[d] = !pendingFilters[d];
+                      setPendingFilters(filterObj);
+                      setChangesMade(true);
+                    }}
+                  >
+                    <FiltersBadge type="Others" toggled={pendingFilters[d]}>
+                      {d} {pendingFilters[d] ? "✓" : "✗"}
+                    </FiltersBadge>
+                  </FiltersToggle>
+                );
+              })}
+            </FiltersRow>
+          </BsContentSection>
+        )} */}
         <BsContentSection>
           <BsContentSectionTitle>Sort</BsContentSectionTitle>
           <SortOption
@@ -400,17 +497,35 @@ const MessagesScreen = ({ navigation }) => {
               {pendingSort === "Most Recent First" ? "✓" : null}
             </SortOptionLabel>
           </SortOption>
-          <SortOption
-            onPress={() => {
-              setPendingSort("Pending Actions First");
-              setChangesMade(true);
-            }}
-          >
-            <SortOptionLabel selected={pendingSort === "Pending Actions First"}>
-              Pending Actions First{" "}
-              {pendingSort === "Pending Actions First" ? "✓" : null}
-            </SortOptionLabel>
-          </SortOption>
+          {identity.status === "parent" ? (
+            <SortOption
+              onPress={() => {
+                setPendingSort("Pending Actions First");
+                setChangesMade(true);
+              }}
+            >
+              <SortOptionLabel
+                selected={pendingSort === "Pending Actions First"}
+              >
+                Pending Actions First{" "}
+                {pendingSort === "Pending Actions First" ? "✓" : null}
+              </SortOptionLabel>
+            </SortOption>
+          ) : (
+            <SortOption
+              onPress={() => {
+                setPendingSort("Pending Responses First");
+                setChangesMade(true);
+              }}
+            >
+              <SortOptionLabel
+                selected={pendingSort === "Pending Responses First"}
+              >
+                Pending Responses First{" "}
+                {pendingSort === "Pending Responses First" ? "✓" : null}
+              </SortOptionLabel>
+            </SortOption>
+          )}
           <SortOption
             onPress={() => {
               setPendingSort("Happening Soonest First");

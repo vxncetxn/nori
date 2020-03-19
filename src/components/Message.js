@@ -3,6 +3,8 @@ import styled, { ThemeContext } from "styled-components";
 import { FontAwesome } from "@expo/vector-icons";
 import { formatDistanceToNow } from "date-fns";
 
+import { IdentityContext, DataContext } from "../Context";
+
 import Badge from "../components/Badge";
 
 const Message = styled.TouchableOpacity`
@@ -13,9 +15,9 @@ const Message = styled.TouchableOpacity`
   overflow: hidden;
 `;
 
-const MessageBadgeRow = styled.ScrollView`
+const MessageBadgeRow = styled.View`
   flex-direction: row;
-  margin-bottom: 10px;
+  flex-wrap: wrap;
   overflow: scroll;
 `;
 
@@ -29,9 +31,11 @@ const MessageTypeBadge = styled(Badge)`
       case "Admin":
         return "#8000ff";
       default:
-        break;
+        return props.theme.colorAccent;
     }
   }};
+  margin-right: 10px;
+  margin-bottom: 10px;
 `;
 
 const MessageTitle = styled.Text`
@@ -55,25 +59,77 @@ const MessageAction = styled.Text`
 `;
 
 const MessageComp = ({ onPress, datum, ...others }) => {
-  const { target, type, title, response } = datum;
+  const identity = useContext(IdentityContext);
+  const { messages } = useContext(DataContext);
+  const { target, type, title, response, publisher, recipients } = datum;
   const theme = useContext(ThemeContext);
+
+  // let childrenBadgesPresent;
+  // let classBadgesPresent;
+  let responseAlertPresent;
+  let responseAlertString;
+  let responseCounterPresent;
+  if (identity.status === "parent") {
+    responseCounterPresent = false;
+    // classBadgesPresent = false;
+
+    if (response.responded) {
+      responseAlertPresent = false;
+      responseAlertString = "";
+    } else {
+      if (response.type === "acknowledgement") {
+        responseAlertPresent = true;
+        responseAlertString = "Acknowledgement Required";
+      } else if (response.type === "consent") {
+        responseAlertPresent = true;
+        responseAlertString = "Consent Required";
+      } else {
+        responseAlertPresent = false;
+        responseAlertString = "";
+      }
+    }
+
+    // if (identity.children.length > 1) {
+    //   childrenBadgesPresent = true;
+    // } else {
+    //   childrenBadgesPresent = false;
+    // }
+  } else {
+    // childrenBadgesPresent = false;
+    // classBadgesPresent = true;
+    responseAlertPresent = false;
+    responseAlertString = "";
+
+    if (identity.id === "awolLVcPcd64t8zEjLa9") {
+      if (response.type) {
+        responseCounterPresent = true;
+      } else {
+        responseCounterPresent = false;
+      }
+    } else {
+      responseCounterPresent = false;
+    }
+  }
 
   return (
     <Message onPress={onPress} {...others}>
       <MessageBadgeRow horizontal={true} showsHorizontalScrollIndicator={false}>
         <MessageTypeBadge type={type}>{type}</MessageTypeBadge>
-        {/* <MessageTypeBadge type={type} style={{ marginLeft: 10 }}>
-          {type}
-        </MessageTypeBadge>
-        <MessageTypeBadge type={type} style={{ marginLeft: 10 }}>
-          {type}
-        </MessageTypeBadge>
-        <MessageTypeBadge type={type} style={{ marginLeft: 10 }}>
-          {type}
-        </MessageTypeBadge>
-        <MessageTypeBadge type={type} style={{ marginLeft: 10 }}>
-          {type}
-        </MessageTypeBadge> */}
+        {/* {childrenBadgesPresent &&
+          identity.children.map(child => {
+            if (recipients.includes(child.class)) {
+              return (
+                <MessageTypeBadge type="Others">
+                  {child.referredName}
+                </MessageTypeBadge>
+              );
+            } else {
+              return null;
+            }
+          })} */}
+        {/* {classBadgesPresent && recipients.map(d => {
+          return <MessageTypeBadge type="Others"></MessageTypeBadge>
+        })} */}
       </MessageBadgeRow>
       <MessageTitle>{title}</MessageTitle>
       {target.dateType === "occurence" ? (
@@ -85,17 +141,18 @@ const MessageComp = ({ onPress, datum, ...others }) => {
           Due {formatDistanceToNow(new Date(target.date))} later
         </MessageDate>
       ) : null}
-      {response.type === "acknowledgement" ? (
+      {responseAlertPresent && (
         <MessageAction>
           <FontAwesome name="exclamation" size={12} color={theme.colorAccent} />{" "}
-          Acknowledgement Required
+          {responseAlertString}
         </MessageAction>
-      ) : response.type === "consent" ? (
+      )}
+      {responseCounterPresent && (
         <MessageAction>
-          <FontAwesome name="exclamation" size={12} color={theme.colorAccent} />{" "}
-          Consent Required
+          {Object.values(response.responded).filter(d => d).length}/
+          {Object.values(response.responded).length} Responded
         </MessageAction>
-      ) : null}
+      )}
     </Message>
   );
 };

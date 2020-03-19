@@ -47,7 +47,7 @@ const cacheImages = images => {
 export default function App() {
   const [identity, setIdentity] = useState({
     id: "awolLVcPcd64t8zEjLa9",
-    status: "teacher",
+    status: "parent",
     name: "Tan Xuan Rong Vance",
     referredName: "Mr Tan",
     class: ["K1A", "K2B"],
@@ -246,10 +246,10 @@ export default function App() {
                       case "Messages":
                         iconName = "notebook";
                         break;
-                      case "Progress":
+                      case "Portfolio":
                         iconName = "chart";
                         break;
-                      case "Happenings":
+                      case "Activities":
                         iconName = "chart";
                         break;
                       case "Chat":
@@ -288,8 +288,8 @@ export default function App() {
                 }}
               >
                 <Tab.Screen name="Messages" component={MessagesStack} />
-                <Tab.Screen name="Progress" component={ProgressScreen} />
-                <Tab.Screen name="Happenings" component={HappeningsStack} />
+                <Tab.Screen name="Portfolio" component={ProgressScreen} />
+                <Tab.Screen name="Activities" component={HappeningsStack} />
                 <Tab.Screen name="Chat" component={ChatScreen} />
                 <Tab.Screen name="Settings" component={SettingsScreen} />
               </Tab.Navigator>

@@ -38,11 +38,7 @@ const ToolsRow = styled.View`
 
 const ToolButton = styled.TouchableOpacity``;
 
-const ToolButtonCalendar = styled(ToolButton)`
-  transform: translateY(-1px);
-`;
-
-const MessageBadgeRow = styled.ScrollView`
+const MessageBadgeRow = styled.View`
   flex-direction: row;
   margin-bottom: 10px;
 `;
@@ -139,6 +135,7 @@ const ResponseList = styled.View``;
 
 const ResponseListItem = styled.View`
   margin-bottom: 15px;
+  opacity: ${props => (props.status ? "1" : "0.3")};
 `;
 
 const ParentsRow = styled.View`
@@ -212,7 +209,7 @@ const MessagesEntryScreen = ({ route, navigation }) => {
       if (response.type === "acknowledgement") {
         responseButtonStatus = "complete";
         responseButtonLabelString = "Acknowledged";
-      } else if (response.type === "consent") {
+      } else {
         responseButtonStatus = "complete";
         responseButtonLabelString = "Consent Given";
       }
@@ -275,20 +272,38 @@ const MessagesEntryScreen = ({ route, navigation }) => {
               color={theme.colorWhite}
             />
           </ToolButton>
-          <ToolButton style={{ marginRight: 20 }}>
+          {/* <ToolButton style={{ marginRight: 20 }}>
             <SimpleLineIcons
               name="question"
               size={25}
               color={theme.colorWhite}
             />
-          </ToolButton>
-          <ToolButtonCalendar>
+          </ToolButton> */}
+          <ToolButton>
             <SimpleLineIcons
               name="calendar"
               size={25}
               color={theme.colorWhite}
             />
-          </ToolButtonCalendar>
+          </ToolButton>
+          {identity.status === "teacher" && (
+            <>
+              <ToolButton style={{ marginLeft: 25 }}>
+                <SimpleLineIcons
+                  name="note"
+                  size={25}
+                  color={theme.colorWhite}
+                />
+              </ToolButton>
+              <ToolButton style={{ marginLeft: 20 }}>
+                <SimpleLineIcons
+                  name="trash"
+                  size={25}
+                  color={theme.colorWhite}
+                />
+              </ToolButton>
+            </>
+          )}
         </ToolsRow>
         <MessageBadgeRow>
           <MessageTypeBadge type={type}>{type}</MessageTypeBadge>
@@ -358,7 +373,25 @@ const MessagesEntryScreen = ({ route, navigation }) => {
         ) : null}
         {responseListPresent &&
           (() => {
-            const responseArr = Object.entries(response.responded);
+            const responseArr = Object.entries(response.responded).sort(
+              (a, b) => {
+                if (a[1] && !b[1]) {
+                  return -1;
+                } else if (!a[1] && b[1]) {
+                  return 1;
+                } else if (a[1] && b[1]) {
+                  if (a[1] === "positive" && !(b[1] === "positive")) {
+                    return -1;
+                  } else if (!(a[1] === "positive") && b[1] === "positive") {
+                    return 1;
+                  } else {
+                    return 0;
+                  }
+                } else {
+                  return 0;
+                }
+              }
+            );
 
             return (
               <>
@@ -374,7 +407,7 @@ const MessagesEntryScreen = ({ route, navigation }) => {
                       .children.map(id => children.get(id));
 
                     return (
-                      <ResponseListItem key={d[0]}>
+                      <ResponseListItem key={d[0]} status={d[1]}>
                         <ParentsRow>
                           <ResponseListImage
                             source={{ uri: parentsArr[0].picture }}
@@ -389,7 +422,7 @@ const MessagesEntryScreen = ({ route, navigation }) => {
                             {parentsArr.length > 1 &&
                               ` and ${parentsArr[1].referredName}`}
                           </RegText>
-                          <TempText status={"positive"}>
+                          <TempText status={d[1]}>
                             {" "}
                             {d[1] === "positive"
                               ? "✓"
@@ -416,56 +449,6 @@ const MessagesEntryScreen = ({ route, navigation }) => {
               </>
             );
           })()}
-        {/* {responseListPresent && (
-          <>
-            <AccentedText style={{ marginVertical: 20 }}>
-              Response 13/{Object.entries(response.responded).length}:{" "}
-            </AccentedText>
-            <ResponseList>
-              {Object.entries(response.responded).map(d => {
-                const parentsArr = parents.get(d[0]).parents;
-                const childrenArr = parents
-                  .get(d[0])
-                  .children.map(id => children.get(id));
-
-                return (
-                  <ResponseListItem key={d[0]}>
-                    <ParentsRow>
-                      <ResponseListImage
-                        source={{ uri: parentsArr[0].picture }}
-                      />
-                      {parentsArr.length > 1 && (
-                        <ResponseListImage
-                          source={{ uri: parentsArr[1].picture }}
-                        />
-                      )}
-                      <RegText>{parentsArr[0].referredName}</RegText>
-                      <RegText>
-                        {parentsArr.length > 1 &&
-                          ` and ${parentsArr[1].referredName}`}
-                      </RegText>
-                      <TempText status={"positive"}>
-                        {" "}
-                        {d[1] === "" ? "✓" : d[1] === "negative" ? "✗" : null}
-                      </TempText>
-                    </ParentsRow>
-                    {childrenArr.map((child, idx) => {
-                      return (
-                        <ChildrenRow key={child.name}>
-                          <Thread first={idx === 0} />
-                          <ResponseListImage
-                            source={require("../../assets/images/child-profile-stock.jpg")}
-                          />
-                          <RegText>{child.referredName}</RegText>
-                        </ChildrenRow>
-                      );
-                    })}
-                  </ResponseListItem>
-                );
-              })}
-            </ResponseList>
-          </>
-        )} */}
       </MainContent>
     </MessagesEntry>
   );
