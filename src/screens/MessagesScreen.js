@@ -359,9 +359,11 @@ const MessagesScreen = ({ navigation }) => {
                   >
                     <ButtonLabel>Organise</ButtonLabel>
                   </Button>
-                  <Button style={{ marginLeft: 10 }}>
-                    <ButtonLabel>Publish</ButtonLabel>
-                  </Button>
+                  {identity.status === "teacher" && (
+                    <Button style={{ marginLeft: 10 }}>
+                      <ButtonLabel>Publish</ButtonLabel>
+                    </Button>
+                  )}
                 </ButtonsRow>
               </Tools>
             </HeroContent>

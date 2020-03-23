@@ -100,7 +100,8 @@ export default function App() {
             },
             target: {
               ...target,
-              date: target.date.toDate()
+              startDate: target.startDate ? target.startDate.toDate() : null,
+              endDate: target.endDate ? target.endDate.toDate() : null
             }
           });
         });

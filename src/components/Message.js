@@ -134,11 +134,11 @@ const MessageComp = ({ onPress, datum, ...others }) => {
       <MessageTitle>{title}</MessageTitle>
       {target.dateType === "occurence" ? (
         <MessageDate>
-          Happening {formatDistanceToNow(new Date(target.date))} later
+          Happening {formatDistanceToNow(new Date(target.startDate))} later
         </MessageDate>
       ) : target.dateType === "deadline" ? (
         <MessageDate>
-          Due {formatDistanceToNow(new Date(target.date))} later
+          Due {formatDistanceToNow(new Date(target.startDate))} later
         </MessageDate>
       ) : null}
       {responseAlertPresent && (
