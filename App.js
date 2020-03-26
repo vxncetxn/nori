@@ -47,7 +47,7 @@ const cacheImages = images => {
 export default function App() {
   const [identity, setIdentity] = useState({
     id: "awolLVcPcd64t8zEjLa9",
-    status: "parent",
+    status: "teacher",
     name: "Tan Xuan Rong Vance",
     referredName: "Mr Tan",
     class: ["K1A", "K2B"],

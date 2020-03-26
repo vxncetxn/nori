@@ -5,11 +5,9 @@ import BottomSheet from "reanimated-bottom-sheet";
 
 import AccentedText from "../components/AccentedText";
 
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-
-const BsContent = styled(KeyboardAwareScrollView)`
+const BsContent = styled.View`
   background-color: ${props => props.theme.colorBgCard};
-  height: ${Dimensions.get("window").height * 0.8}px;
+  height: ${Dimensions.get("window").height * 0.75}px;
   padding: 0 20px 20px 20px;
 `;
 

@@ -1,8 +1,8 @@
 import React, { useRef, useState, useContext } from "react";
 import styled from "styled-components";
 import { Dimensions } from "react-native";
-import Animated from "react-native-reanimated";
 import { SimpleLineIcons } from "@expo/vector-icons";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 import { IdentityContext, DataContext } from "../Context";
 
@@ -10,12 +10,15 @@ import ImageTint from "../components/ImageTint";
 import MasonryGrid from "../components/MasonryGrid";
 import Message from "../components/Message";
 import Badge from "../components/Badge";
-import BottomSheet from "../components/BottomSheet";
 
-const ScreenWrapper = styled.View`
-  flex: 1;
-  background-color: #000000;
-`;
+import WithBsView from "../components/WithBsView";
+import AccentedText from "../components/AccentedText";
+import FormInput from "../components/FormInput";
+import FormExpander from "../components/FormExpander";
+import FormSelection from "../components/FormSelection";
+import FormTextArea from "../components/FormTextArea";
+import FormDateTime from "../components/FormDateTime";
+import KeyboardToolbar from "../components/KeyboardToolbar";
 
 const Messages = styled.ScrollView`
   background-color: ${props => props.theme.colorBg};
@@ -92,17 +95,6 @@ const ButtonLabel = styled.Text`
   color: ${props => props.theme.colorWhite};
 `;
 
-const BsContentSection = styled.View`
-  margin-bottom: 40px;
-`;
-
-const BsContentSectionTitle = styled.Text`
-  color: ${props => props.theme.colorText};
-  font-size: 20px;
-  font-family: "${props => props.theme.fontPrimary}";
-  margin-bottom: 20px;
-`;
-
 const FiltersRow = styled.View`
   flex-direction: row;
   flex-wrap: wrap;
@@ -130,40 +122,11 @@ const FiltersBadge = styled(Badge)`
   }};
 `;
 
-const SortOption = styled.TouchableOpacity``;
-
-const SortOptionLabel = styled.Text`
-  color: ${props =>
-    props.selected ? props => props.theme.colorAccent : props.theme.colorText};
-  font-size: 14px;
-  font-family: "${props => props.theme.fontSecondary}";
-  margin-bottom: 15px
-`;
-
-const BsButtonsRow = styled.View`
-  align-self: center;
-  flex-direction: row;
-  justify-content: space-evenly;
-  width: 70%;
-`;
-
-const BsButton = styled.TouchableOpacity``;
-
-const BsButtonLabel = styled.Text`
-  color: ${props =>
-    props.active
-      ? props => props.theme.colorAccent
-      : props.theme.colorInactiveGrey};
-  font-size: 20px;
+const BsHeader = styled.Text`
+  color: ${props => props.theme.colorText};
+  font-size: 36px;
   font-family: "${props => props.theme.fontPrimary}";
-`;
-
-const Overlay = styled(Animated.View)`
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  margin-bottom: 20px;
 `;
 
 const MessagesScreen = ({ navigation }) => {
@@ -171,7 +134,8 @@ const MessagesScreen = ({ navigation }) => {
   const { messages } = useContext(DataContext);
 
   const bsRef = useRef();
-  const bsAnimNode = useRef(new Animated.Value(1));
+
+  const [bsMode, setBsMode] = useState("Organise");
 
   const [searchQuery, setSearchQuery] = useState("");
   const [changesMade, setChangesMade] = useState(false);
@@ -181,40 +145,22 @@ const MessagesScreen = ({ navigation }) => {
     Event: true,
     Admin: true
   };
-  // if (identity.status === "parent") {
-  //   identity.children.length > 1 &&
-  //     identity.children.forEach(child => {
-  //       filterObj[child.referredName] = true;
-  //     });
-  // } else {
-  //   identity.class.forEach(d => {
-  //     filterObj[d] = true;
-  //   });
-  // }
 
   const [appliedFilters, setAppliedFilters] = useState(filterObj);
   const [appliedSort, setAppliedSort] = useState("Most Recent First");
   const [pendingFilters, setPendingFilters] = useState(filterObj);
   const [pendingSort, setPendingSort] = useState("Most Recent First");
 
-  // let filterChildrenPresent;
-  // let filterClassPresent;
-
-  // if (identity.status === "parent") {
-  //   filterClassPresent = false;
-
-  //   if (identity.children.length > 1) {
-  //     filterChildrenPresent = true;
-  //   } else {
-  //     filterChildrenPresent = false;
-  //   }
-  // } else {
-  //   filterChildrenPresent = false;
-  //   filterClassPresent = true;
-  // }
+  const [categoryVal, setCategoryVal] = useState("Notice");
+  const [titleVal, setTitleVal] = useState("");
+  const [resType, setResType] = useState(null);
+  const [resDeadline, setResDeadline] = useState(null);
+  const [calStartDate, setCalStartDate] = useState(null);
+  const [calEndDate, setCalEndDate] = useState(null);
+  const [locationVal, setLocationVal] = useState(null);
+  const [detailsVal, setDetailsVal] = useState("");
 
   const organiseData = data => {
-    // let organised = JSON.parse(JSON.stringify(data));
     let organised = data.map(d => d);
     const loweredSearchQuery = searchQuery.toLowerCase();
 
@@ -321,246 +267,254 @@ const MessagesScreen = ({ navigation }) => {
   };
 
   return (
-    <ScreenWrapper>
-      <Overlay
-        style={{
-          opacity: Animated.interpolate(bsAnimNode.current, {
-            inputRange: [0, 1],
-            outputRange: [0.2, 1],
-            extrapolate: Animated.Extrapolate.CLAMP
-          })
-        }}
-      >
-        <Messages showsVerticalScrollIndicator={false}>
-          <Hero>
-            <HeroImage
-              source={require("../../assets/images/messages-hero.png")}
-            />
-            <ImageTint />
-            <HeroContent>
-              <HeroTitle>Messages</HeroTitle>
-              <Tools>
-                <SearchBarWrapper>
-                  <SearchBar
-                    placeholder="Search"
-                    placeholderTextColor="#bfbfbf"
-                    onChangeText={text => setSearchQuery(text)}
-                    value={searchQuery}
-                  />
-                  <SearchBarIcon name="magnifier" size={15} color={"grey"} />
-                </SearchBarWrapper>
-                <ButtonsRow>
-                  <Button
-                    onPress={() => {
-                      setPendingFilters(appliedFilters);
-                      setPendingSort(appliedSort);
-                      requestAnimationFrame(() => bsRef.current.snapTo(0));
-                    }}
-                  >
-                    <ButtonLabel>Organise</ButtonLabel>
-                  </Button>
-                  {identity.status === "teacher" && (
-                    <Button style={{ marginLeft: 10 }}>
-                      <ButtonLabel>Publish</ButtonLabel>
-                    </Button>
-                  )}
-                </ButtonsRow>
-              </Tools>
-            </HeroContent>
-          </Hero>
-          <MasonryGrid
-            style={{ paddingRight: 20, paddingBottom: 20, paddingLeft: 20 }}
-            cols={2}
-            gap={20}
-            data={organiseData(messages)}
-            childGenFunc={d => (
-              <Message
-                key={d.title}
-                onPress={() => navigation.navigate("MessagesEntry", d)}
-                datum={d}
-              />
-            )}
-          />
-        </Messages>
-      </Overlay>
-      <BottomSheet
-        ref={bsRef}
-        snapPoints={["80%", "0%"]}
-        initialSnap={1}
-        callbackNode={bsAnimNode.current}
-        onCloseEnd={() => setChangesMade(false)}
-      >
-        <BsContentSection>
-          <BsContentSectionTitle>Filter by type</BsContentSectionTitle>
-          <FiltersRow>
-            <FiltersToggle
-              onPress={() => {
-                setPendingFilters({
-                  ...pendingFilters,
-                  Notice: !pendingFilters["Notice"]
-                });
-                setChangesMade(true);
-              }}
-            >
-              <FiltersBadge type="Notice" toggled={pendingFilters["Notice"]}>
-                Notice {pendingFilters["Notice"] ? "✓" : "✗"}
-              </FiltersBadge>
-            </FiltersToggle>
-            <FiltersToggle
-              onPress={() => {
-                setPendingFilters({
-                  ...pendingFilters,
-                  Event: !pendingFilters["Event"]
-                });
-                setChangesMade(true);
-              }}
-            >
-              <FiltersBadge type="Event" toggled={pendingFilters["Event"]}>
-                Event {pendingFilters["Event"] ? "✓" : "✗"}
-              </FiltersBadge>
-            </FiltersToggle>
-            <FiltersToggle
-              onPress={() => {
-                setPendingFilters({
-                  ...pendingFilters,
-                  Admin: !pendingFilters["Admin"]
-                });
-                setChangesMade(true);
-              }}
-            >
-              <FiltersBadge type="Admin" toggled={pendingFilters["Admin"]}>
-                Admin {pendingFilters["Admin"] ? "✓" : "✗"}
-              </FiltersBadge>
-            </FiltersToggle>
-          </FiltersRow>
-        </BsContentSection>
-        {/* {filterChildrenPresent && (
-          <BsContentSection>
-            <BsContentSectionTitle>Filter by child</BsContentSectionTitle>
-            <FiltersRow>
-              {identity.children.map(child => {
-                const referredName = child.referredName;
-                return (
-                  <FiltersToggle
-                    key={referredName}
-                    onPress={() => {
-                      const filterObj = { ...pendingFilters };
-                      filterObj[referredName] = !pendingFilters[referredName];
-                      setPendingFilters(filterObj);
-                      setChangesMade(true);
-                    }}
-                  >
-                    <FiltersBadge
-                      type="Others"
-                      toggled={pendingFilters[referredName]}
-                    >
-                      {referredName} {pendingFilters[referredName] ? "✓" : "✗"}
-                    </FiltersBadge>
-                  </FiltersToggle>
-                );
-              })}
-            </FiltersRow>
-          </BsContentSection>
-        )}
-        {filterClassPresent && (
-          <BsContentSection>
-            <BsContentSectionTitle>Filter by class</BsContentSectionTitle>
-            <FiltersRow>
-              {identity.class.map(d => {
-                return (
-                  <FiltersToggle
-                    key={d}
-                    onPress={() => {
-                      const filterObj = { ...pendingFilters };
-                      filterObj[d] = !pendingFilters[d];
-                      setPendingFilters(filterObj);
-                      setChangesMade(true);
-                    }}
-                  >
-                    <FiltersBadge type="Others" toggled={pendingFilters[d]}>
-                      {d} {pendingFilters[d] ? "✓" : "✗"}
-                    </FiltersBadge>
-                  </FiltersToggle>
-                );
-              })}
-            </FiltersRow>
-          </BsContentSection>
-        )} */}
-        <BsContentSection>
-          <BsContentSectionTitle>Sort</BsContentSectionTitle>
-          <SortOption
-            onPress={() => {
-              setPendingSort("Most Recent First");
-              setChangesMade(true);
-            }}
-          >
-            <SortOptionLabel selected={pendingSort === "Most Recent First"}>
-              Most Recent First{" "}
-              {pendingSort === "Most Recent First" ? "✓" : null}
-            </SortOptionLabel>
-          </SortOption>
-          {identity.status === "parent" ? (
-            <SortOption
-              onPress={() => {
-                setPendingSort("Pending Actions First");
-                setChangesMade(true);
-              }}
-            >
-              <SortOptionLabel
-                selected={pendingSort === "Pending Actions First"}
-              >
-                Pending Actions First{" "}
-                {pendingSort === "Pending Actions First" ? "✓" : null}
-              </SortOptionLabel>
-            </SortOption>
-          ) : (
-            <SortOption
-              onPress={() => {
-                setPendingSort("Pending Responses First");
-                setChangesMade(true);
-              }}
-            >
-              <SortOptionLabel
-                selected={pendingSort === "Pending Responses First"}
-              >
-                Pending Responses First{" "}
-                {pendingSort === "Pending Responses First" ? "✓" : null}
-              </SortOptionLabel>
-            </SortOption>
-          )}
-          <SortOption
-            onPress={() => {
-              setPendingSort("Happening Soonest First");
-              setChangesMade(true);
-            }}
-          >
-            <SortOptionLabel
-              selected={pendingSort === "Happening Soonest First"}
-            >
-              Happening Soonest First{" "}
-              {pendingSort === "Happening Soonest First" ? "✓" : null}
-            </SortOptionLabel>
-          </SortOption>
-        </BsContentSection>
-        <BsContentSection style={{ marginTop: "auto" }}>
-          <BsButtonsRow style={{ alignItems: "center" }}>
-            <BsButton
-              onPress={() => {
+    <WithBsView
+      ref={bsRef}
+      bsProps={
+        bsMode === "Organise"
+          ? {
+              submitLabel: "Apply",
+              onSubmit: () => {
                 requestAnimationFrame(() => bsRef.current.snapTo(1));
                 setAppliedFilters(pendingFilters);
                 setAppliedSort(pendingSort);
-              }}
-              disabled={!changesMade}
-            >
-              <BsButtonLabel active={changesMade}>Apply</BsButtonLabel>
-            </BsButton>
-            <BsButton onPress={() => bsRef.current.snapTo(1)}>
-              <BsButtonLabel active={true}>Cancel</BsButtonLabel>
-            </BsButton>
-          </BsButtonsRow>
-        </BsContentSection>
-      </BottomSheet>
-    </ScreenWrapper>
+              }
+            }
+          : { submitLabel: "Publish", onSubmit: () => {} }
+      }
+      bsChildren={
+        bsMode === "Organise" ? (
+          <KeyboardAwareScrollView extraHeight={0}>
+            <BsHeader>Organise</BsHeader>
+            <AccentedText style={{ marginBottom: 15 }}>
+              Filter by category
+            </AccentedText>
+            <FiltersRow>
+              <FiltersToggle
+                onPress={() => {
+                  setPendingFilters({
+                    ...pendingFilters,
+                    Notice: !pendingFilters["Notice"]
+                  });
+                  setChangesMade(true);
+                }}
+              >
+                <FiltersBadge type="Notice" toggled={pendingFilters["Notice"]}>
+                  Notice {pendingFilters["Notice"] ? "✓" : "✗"}
+                </FiltersBadge>
+              </FiltersToggle>
+              <FiltersToggle
+                onPress={() => {
+                  setPendingFilters({
+                    ...pendingFilters,
+                    Event: !pendingFilters["Event"]
+                  });
+                  setChangesMade(true);
+                }}
+              >
+                <FiltersBadge type="Event" toggled={pendingFilters["Event"]}>
+                  Event {pendingFilters["Event"] ? "✓" : "✗"}
+                </FiltersBadge>
+              </FiltersToggle>
+              <FiltersToggle
+                onPress={() => {
+                  setPendingFilters({
+                    ...pendingFilters,
+                    Admin: !pendingFilters["Admin"]
+                  });
+                  setChangesMade(true);
+                }}
+              >
+                <FiltersBadge type="Admin" toggled={pendingFilters["Admin"]}>
+                  Admin {pendingFilters["Admin"] ? "✓" : "✗"}
+                </FiltersBadge>
+              </FiltersToggle>
+            </FiltersRow>
+            <AccentedText style={{ marginBottom: 15 }}>Sort</AccentedText>
+            <FormSelection
+              style={{ marginBottom: 15, marginLeft: 20 }}
+              options={
+                identity.status === "parent"
+                  ? [
+                      "Most Recent First",
+                      "Pending Actions First",
+                      "Happening Soonest First"
+                    ]
+                  : [
+                      "Most Recent First",
+                      "Pending Responses First",
+                      "Happening Soonest First"
+                    ]
+              }
+              value={pendingSort}
+              setValue={selected => setPendingSort(selected)}
+            />
+          </KeyboardAwareScrollView>
+        ) : (
+          <>
+            <KeyboardAwareScrollView extraHeight={0}>
+              <BsHeader>Publish Message</BsHeader>
+              <FiltersRow>
+                <FiltersToggle onPress={() => setCategoryVal("Notice")}>
+                  <FiltersBadge
+                    type="Notice"
+                    toggled={categoryVal === "Notice"}
+                  >
+                    Notice
+                  </FiltersBadge>
+                </FiltersToggle>
+                <FiltersToggle onPress={() => setCategoryVal("Event")}>
+                  <FiltersBadge type="Event" toggled={categoryVal === "Event"}>
+                    Event
+                  </FiltersBadge>
+                </FiltersToggle>
+                <FiltersToggle onPress={() => setCategoryVal("Admin")}>
+                  <FiltersBadge type="Admin" toggled={categoryVal === "Admin"}>
+                    Admin
+                  </FiltersBadge>
+                </FiltersToggle>
+              </FiltersRow>
+              <FormInput
+                style={{ marginBottom: 15 }}
+                label="Title: "
+                multiline
+                inputAccessoryViewID="messages-keyboard-toolbar"
+                value={titleVal}
+                onChangeText={text => setTitleVal(text)}
+                placeholder="Required"
+              />
+              <FormInput
+                style={{ marginBottom: 15 }}
+                label="Recipients: "
+                multiline
+                inputAccessoryViewID="messages-keyboard-toolbar"
+                value={titleVal}
+                onChangeText={text => setTitleVal(text)}
+                placeholder="Required"
+              />
+              <FormExpander
+                style={{ marginBottom: 15 }}
+                label="Response Details"
+                onExpandSideEffect={() =>
+                  resType ? null : setResType("Acknowledgement")
+                }
+              >
+                <AccentedText style={{ marginVertical: 15 }}>
+                  Response Type:
+                </AccentedText>
+                <FormSelection
+                  style={{ marginBottom: 15, marginLeft: 20 }}
+                  options={["Acknowledgement", "Consent"]}
+                  value={resType}
+                  setValue={selected => setResType(selected)}
+                />
+                <FormDateTime
+                  label="Deadline: "
+                  value={resDeadline}
+                  onChange={(e, date) => setResDeadline(date)}
+                  placeholder="Required"
+                />
+              </FormExpander>
+              <FormExpander
+                style={{ marginBottom: 15 }}
+                label="Calendar Details"
+              >
+                <FormDateTime
+                  style={{ marginVertical: 15 }}
+                  label="Start Date/Time: "
+                  value={calStartDate}
+                  onChange={(e, date) => setCalStartDate(date)}
+                  placeholder="Required"
+                />
+                <FormDateTime
+                  style={{ marginBottom: 15 }}
+                  label="End Date/Time: "
+                  value={calEndDate}
+                  onChange={(e, date) => setCalEndDate(date)}
+                  placeholder="Optional"
+                />
+                <FormInput
+                  label="Location: "
+                  multiline
+                  inputAccessoryViewID="messages-keyboard-toolbar"
+                  value={locationVal}
+                  onChangeText={text => setLocationVal(text)}
+                  placeholder="Optional"
+                />
+              </FormExpander>
+              <FormTextArea
+                inputAccessoryViewID="messages-keyboard-toolbar"
+                placeholder="Write message details here"
+                value={detailsVal}
+                onChangeText={text => setDetailsVal(text)}
+              />
+            </KeyboardAwareScrollView>
+            <KeyboardToolbar
+              nativeID="messages-keyboard-toolbar"
+              functions={["camera", "gallery", "documents"]}
+            />
+          </>
+        )
+      }
+    >
+      <Messages showsVerticalScrollIndicator={false}>
+        <Hero>
+          <HeroImage
+            source={require("../../assets/images/messages-hero.png")}
+          />
+          <ImageTint />
+          <HeroContent>
+            <HeroTitle>Messages</HeroTitle>
+            <Tools>
+              <SearchBarWrapper>
+                <SearchBar
+                  placeholder="Search"
+                  placeholderTextColor="#bfbfbf"
+                  onChangeText={text => setSearchQuery(text)}
+                  value={searchQuery}
+                />
+                <SearchBarIcon name="magnifier" size={15} color={"grey"} />
+              </SearchBarWrapper>
+              <ButtonsRow>
+                <Button
+                  onPress={() => {
+                    setBsMode("Organise");
+                    setPendingFilters(appliedFilters);
+                    setPendingSort(appliedSort);
+                    requestAnimationFrame(() => bsRef.current.snapTo(0));
+                  }}
+                >
+                  <ButtonLabel>Organise</ButtonLabel>
+                </Button>
+                {identity.status === "teacher" && (
+                  <Button
+                    style={{ marginLeft: 10 }}
+                    onPress={() => {
+                      setBsMode("Publish");
+                      requestAnimationFrame(() => bsRef.current.snapTo(0));
+                    }}
+                  >
+                    <ButtonLabel>Publish</ButtonLabel>
+                  </Button>
+                )}
+              </ButtonsRow>
+            </Tools>
+          </HeroContent>
+        </Hero>
+        <MasonryGrid
+          style={{ paddingRight: 20, paddingBottom: 20, paddingLeft: 20 }}
+          cols={2}
+          gap={20}
+          data={organiseData(messages)}
+          childGenFunc={d => (
+            <Message
+              key={d.title}
+              onPress={() => navigation.navigate("MessagesEntry", d)}
+              datum={d}
+            />
+          )}
+        />
+      </Messages>
+    </WithBsView>
   );
 };
 

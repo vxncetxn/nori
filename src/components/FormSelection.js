@@ -3,9 +3,7 @@ import styled from "styled-components";
 
 const FormSelection = styled.View``;
 
-const SelectionOption = styled.TouchableOpacity`
-  margin-bottom: 20px;
-`;
+const SelectionOption = styled.TouchableOpacity``;
 
 const SelectionOptionLabel = styled.Text`
   color: ${props =>
@@ -17,9 +15,13 @@ const SelectionOptionLabel = styled.Text`
 const FormSelectionComp = ({ options, value, setValue, ...others }) => {
   return (
     <FormSelection {...others}>
-      {options.map(option => {
+      {options.map((option, idx) => {
         return (
-          <SelectionOption key={option} onPress={() => setValue(option)}>
+          <SelectionOption
+            style={{ marginBottom: idx !== options.length - 1 ? 15 : 0 }}
+            key={option}
+            onPress={() => setValue(option)}
+          >
             <SelectionOptionLabel selected={option === value}>
               {option} {option === value ? "✓" : null}
             </SelectionOptionLabel>

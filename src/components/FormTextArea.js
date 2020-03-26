@@ -5,7 +5,7 @@ const FormTextArea = styled.TextInput`
   font-family: "${props => props.theme.fontSecondary}";
   font-size: 16px;
   color: ${props => props.theme.colorText};
-  height: 400px;
+  min-height: 400px;
 `;
 
 const FormTextAreaComp = ({ ...others }) => {

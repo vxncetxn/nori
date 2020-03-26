@@ -42,6 +42,7 @@ const FormInputComp = ({ style, label, value, onChangeText, ...others }) => {
         selectionColor={theme.colorAccent}
         value={value}
         onChangeText={onChangeText}
+        placeholderTextColor={theme.colorInactiveGrey}
         {...others}
       />
       {value ? (

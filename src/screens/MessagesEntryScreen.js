@@ -1,4 +1,4 @@
-import React, { useContext, useRef, useState, useEffect } from "react";
+import React, { useContext, useRef, useState } from "react";
 import styled, { ThemeContext } from "styled-components";
 import { SimpleLineIcons, FontAwesome } from "@expo/vector-icons";
 import { format, formatDistanceToNow } from "date-fns";
@@ -6,32 +6,22 @@ import { LinearGradient } from "expo-linear-gradient";
 import * as Calendar from "expo-calendar";
 import * as Localization from "expo-localization";
 import { Platform } from "@unimodules/core";
-import Animated from "react-native-reanimated";
 import { Keyboard } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 import { IdentityContext, DataContext } from "../Context";
 
+import WithBsView from "../components/WithBsView";
 import Badge from "../components/Badge";
 import RegText from "../components/RegText";
 import AccentedText from "../components/AccentedText";
-import FormBottomSheet from "../components/FormBottomSheet";
+import Anchor from "../components/Anchor";
 import FormInput from "../components/FormInput";
 import FormExpander from "../components/FormExpander";
 import FormSelection from "../components/FormSelection";
 import FormTextArea from "../components/FormTextArea";
-
-const ScreenWrapper = styled.View`
-  flex: 1;
-  background-color: #000000;
-`;
-
-const Overlay = styled(Animated.View)`
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-`;
+import FormDateTime from "../components/FormDateTime";
+import KeyboardToolbar from "../components/KeyboardToolbar";
 
 const MessagesEntry = styled.ScrollView`
   background-color: ${props => props.theme.colorBg};
@@ -209,7 +199,7 @@ const Thread = styled.View`
   border-bottom-left-radius: 8px;
 `;
 
-const BsContentSectionTitle = styled.Text`
+const BsHeader = styled.Text`
   color: ${props => props.theme.colorText};
   font-size: 36px;
   font-family: "${props => props.theme.fontPrimary}";
@@ -224,22 +214,69 @@ const StyledFormSelection = styled(FormSelection)`
   margin-top: 20px;
 `;
 
+const FiltersRow = styled.View`
+  flex-direction: row;
+  flex-wrap: wrap;
+`;
+
+const FiltersToggle = styled.TouchableOpacity``;
+
+const FiltersBadge = styled(Badge)`
+  margin-right: 20px;
+  margin-bottom: 15px;
+  background-color: ${props => {
+    if (props.toggled) {
+      if (props.type === "Notice") {
+        return "#0080ff";
+      } else if (props.type === "Event") {
+        return "#ff00ff";
+      } else if (props.type === "Admin") {
+        return "#8000ff";
+      } else {
+        return props.theme.colorAccent;
+      }
+    } else {
+      return props.theme.colorInactiveGrey;
+    }
+  }};
+`;
+
 const MessagesEntryScreen = ({ route, navigation }) => {
   const identity = useContext(IdentityContext);
   const { teachers, parents, children } = useContext(DataContext);
 
-  let { createdDate, target, type, title, publisher, response } = route.params;
+  let {
+    createdDate,
+    target,
+    type,
+    title,
+    publisher,
+    response,
+    details
+  } = route.params;
 
   const bsRef = useRef();
-  const bsAnimNode = useRef(new Animated.Value(1));
 
-  const [titleVal, setTitleVal] = useState("");
+  const [bsMode, setBsMode] = useState("Calendar");
+
+  const [calTitleVal, setCalTitleVal] = useState(title);
   const [alertVal, setAlertVal] = useState("");
   const [notesVal, setNotesVal] = useState("");
 
-  useEffect(() => {
-    setTitleVal(title);
-  }, [title]);
+  const [categoryVal, setCategoryVal] = useState(type);
+  const [titleVal, setTitleVal] = useState(title);
+  const [resType, setResType] = useState(response.type || null);
+  const [resDeadline, setResDeadline] = useState(
+    response.type ? new Date(response.deadline) : null
+  );
+  const [calStartDate, setCalStartDate] = useState(
+    target.dateType ? new Date(target.startDate) : null
+  );
+  const [calEndDate, setCalEndDate] = useState(
+    new Date(target.endDate) || null
+  );
+  const [locationVal, setLocationVal] = useState(target.location || "");
+  const [detailsVal, setDetailsVal] = useState(details);
 
   let responseAlertPresent;
   let responseAlertString;
@@ -255,7 +292,7 @@ const MessagesEntryScreen = ({ route, navigation }) => {
       responseAlertPresent = false;
       responseAlertString = "";
 
-      if (response.type === "acknowledgement") {
+      if (response.type === "Acknowledgement") {
         responseButtonStatus = "complete";
         responseButtonLabelString = "Acknowledged";
       } else {
@@ -263,7 +300,7 @@ const MessagesEntryScreen = ({ route, navigation }) => {
         responseButtonLabelString = "Consent Given";
       }
     } else {
-      if (response.type === "acknowledgement") {
+      if (response.type === "Acknowledgement") {
         responseAlertPresent = true;
         responseAlertString = `You have to acknowledge by ${format(
           new Date(response.deadline),
@@ -271,7 +308,7 @@ const MessagesEntryScreen = ({ route, navigation }) => {
         )}`;
         responseButtonStatus = "pending";
         responseButtonLabelString = "Acknowledge";
-      } else if (response.type === "consent") {
+      } else if (response.type === "Consent") {
         responseAlertPresent = true;
         responseAlertString = `You have to give consent by ${format(
           new Date(response.deadline),
@@ -315,7 +352,7 @@ const MessagesEntryScreen = ({ route, navigation }) => {
     }
 
     await Calendar.createEventAsync(calendarID, {
-      title: titleVal,
+      title: calTitleVal,
       startDate: new Date(target.startDate),
       endDate: target.endDate
         ? new Date(target.endDate)
@@ -345,101 +382,30 @@ const MessagesEntryScreen = ({ route, navigation }) => {
   };
 
   return (
-    <ScreenWrapper>
-      <Overlay
-        style={{
-          opacity: Animated.interpolate(bsAnimNode.current, {
-            inputRange: [0, 1],
-            outputRange: [0.2, 1],
-            extrapolate: Animated.Extrapolate.CLAMP
-          })
-        }}
-      >
-        <MessagesEntry>
-          <Hero>
-            <ImageTint
-              colors={["rgba(0, 0, 0, 0.3)", "rgba(0, 0, 0, 1)"]}
-            ></ImageTint>
-            <ToolsRow>
-              <ToolButton
-                onPress={() => navigation.navigate("Messages")}
-                style={{ marginRight: "auto" }}
-              >
-                <SimpleLineIcons
-                  name="arrow-left"
-                  size={25}
-                  color={theme.colorWhite}
-                />
-              </ToolButton>
-              <ToolButton
-                onPress={async () => {
-                  const {
-                    status
-                  } = await Calendar.requestCalendarPermissionsAsync();
-
-                  if (status === "granted") {
-                    requestAnimationFrame(() => bsRef.current.snapTo(0));
-                  }
-                }}
-              >
-                <SimpleLineIcons
-                  name="calendar"
-                  size={25}
-                  color={theme.colorWhite}
-                />
-              </ToolButton>
-              {identity.status === "teacher" && (
-                <>
-                  <ToolButton style={{ marginLeft: 25 }}>
-                    <SimpleLineIcons
-                      name="note"
-                      size={25}
-                      color={theme.colorWhite}
-                    />
-                  </ToolButton>
-                  <ToolButton style={{ marginLeft: 20 }}>
-                    <SimpleLineIcons
-                      name="trash"
-                      size={25}
-                      color={theme.colorWhite}
-                    />
-                  </ToolButton>
-                </>
-              )}
-            </ToolsRow>
-            <MessageBadgeRow>
-              <MessageTypeBadge type={type}>{type}</MessageTypeBadge>
-            </MessageBadgeRow>
-            <HeroTitle>{title}</HeroTitle>
-            <OtherInfoRow>
-              <PublisherImage
-                source={{ uri: teachers.get(publisher).picture }}
-              />
-              <OtherInfoContent>
-                <PublisherText>
-                  {teachers.get(publisher).referredName}
-                </PublisherText>
-                <DateText>
-                  Posted {formatDistanceToNow(new Date(createdDate))} ago
-                </DateText>
-              </OtherInfoContent>
-            </OtherInfoRow>
-          </Hero>
-          <MainContent>
-            {responseAlertPresent ? (
-              <AccentedText style={{ marginBottom: 40 }}>
-                <FontAwesome
-                  name="exclamation"
-                  size={15}
-                  color={theme.colorAccent}
-                />{" "}
-                {responseAlertString}
-              </AccentedText>
-            ) : null}
+    <WithBsView
+      ref={bsRef}
+      bsProps={
+        bsMode === "Calendar"
+          ? {
+              submitLabel: "Add",
+              onSubmit: addEventToCalendar
+            }
+          : { submitLabel: "Publish Edits", onSubmit: () => {} }
+      }
+      bsChildren={
+        bsMode === "Calendar" ? (
+          <KeyboardAwareScrollView extraHeight={0}>
+            <BsHeader>Add To Calendar</BsHeader>
+            <StyledFormInput
+              label="Title: "
+              multiline
+              value={calTitleVal}
+              onChangeText={text => setCalTitleVal(text)}
+            />
             {target.dateType ? (
-              <TargetDateText>
+              <TargetDateText style={{ marginBottom: 15 }}>
                 <AccentedText>
-                  {target.dateType === "occurence" ? "Happening on" : "Due on"}:{" "}
+                  {target.dateType === "Occurence" ? "Happening on" : "Due on"}:{" "}
                 </AccentedText>
                 <RegText>
                   {format(new Date(target.startDate), "do LLLL yyyy, K:mma")}
@@ -453,183 +419,366 @@ const MessagesEntryScreen = ({ route, navigation }) => {
               </TargetDateText>
             ) : null}
             {target.location ? (
-              <LocationText>
+              <LocationText style={{ marginBottom: 15 }}>
                 <AccentedText>Location: </AccentedText>
                 <RegText>{target.location}</RegText>
               </LocationText>
             ) : null}
-            <RegText>
-              It is a long established fact that a reader will be distracted by
-              the readable content of a page when looking at its layout. The
-              point of using Lorem Ipsum is that it has a more-or-less normal
-              distribution of letters, as opposed to using 'Content here,
-              content here', making it look like readable English.
-              {"\n"}
-              {"\n"}
-              Many desktop publishing packages and web page editors now use
-              Lorem Ipsum as their default model text, and a search for 'lorem
-              ipsum' will uncover many web sites still in their infancy. Various
-              versions have evolved over the years, sometimes by accident,
-              sometimes on purpose (injected humour and the like).
-            </RegText>
-            {responseButtonPresent ? (
-              <ResponseButton
-                style={{ marginTop: 60 }}
-                disabled={response.type ? false : true}
-                responseButtonStatus={responseButtonStatus}
+            <FormExpander
+              style={{ marginBottom: 15 }}
+              label="Alert"
+              onExpandSideEffect={() => setAlertVal("At time of event")}
+            >
+              <StyledFormSelection
+                options={[
+                  "At time of event",
+                  "30 minutes before",
+                  "1 hour before",
+                  "2 hours before",
+                  "1 day before",
+                  "2 days before"
+                ]}
+                value={alertVal}
+                setValue={selected => setAlertVal(selected)}
+              />
+            </FormExpander>
+            <FormTextArea
+              placeholder="Write notes for calendar entry here"
+              value={notesVal}
+              onChangeText={text => setNotesVal(text)}
+            />
+          </KeyboardAwareScrollView>
+        ) : (
+          <>
+            <KeyboardAwareScrollView extraHeight={0}>
+              <BsHeader>Edit Message</BsHeader>
+              <FiltersRow>
+                <FiltersToggle onPress={() => setCategoryVal("Notice")}>
+                  <FiltersBadge
+                    type="Notice"
+                    toggled={categoryVal === "Notice"}
+                  >
+                    Notice
+                  </FiltersBadge>
+                </FiltersToggle>
+                <FiltersToggle onPress={() => setCategoryVal("Event")}>
+                  <FiltersBadge type="Event" toggled={categoryVal === "Event"}>
+                    Event
+                  </FiltersBadge>
+                </FiltersToggle>
+                <FiltersToggle onPress={() => setCategoryVal("Admin")}>
+                  <FiltersBadge type="Admin" toggled={categoryVal === "Admin"}>
+                    Admin
+                  </FiltersBadge>
+                </FiltersToggle>
+              </FiltersRow>
+              <FormInput
+                style={{ marginBottom: 15 }}
+                label="Title: "
+                multiline
+                inputAccessoryViewID="messages-keyboard-toolbar"
+                value={titleVal}
+                onChangeText={text => setTitleVal(text)}
+                placeholder="Required"
+              />
+              <FormInput
+                style={{ marginBottom: 15 }}
+                label="Recipients: "
+                multiline
+                inputAccessoryViewID="messages-keyboard-toolbar"
+                value={titleVal}
+                onChangeText={text => setTitleVal(text)}
+                placeholder="Required"
+              />
+              <FormExpander
+                style={{ marginBottom: 15 }}
+                label="Response Details"
+                onExpandSideEffect={() =>
+                  resType ? null : setResType("Acknowledgement")
+                }
               >
-                <ResponseButtonLabel>
-                  {responseButtonLabelString}
-                </ResponseButtonLabel>
-              </ResponseButton>
-            ) : null}
-            {responseListPresent &&
-              (() => {
-                const responseArr = Object.entries(response.responded).sort(
-                  (a, b) => {
-                    if (a[1] && !b[1]) {
+                <AccentedText style={{ marginVertical: 15 }}>
+                  Response Type:
+                </AccentedText>
+                <FormSelection
+                  style={{ marginBottom: 15, marginLeft: 20 }}
+                  options={["Acknowledgement", "Consent"]}
+                  value={resType}
+                  setValue={selected => setResType(selected)}
+                />
+                <FormDateTime
+                  label="Deadline: "
+                  value={resDeadline}
+                  onChange={(e, date) => setResDeadline(date)}
+                  placeholder="Required"
+                />
+              </FormExpander>
+              <FormExpander
+                style={{ marginBottom: 15 }}
+                label="Calendar Details"
+              >
+                <FormDateTime
+                  style={{ marginVertical: 15 }}
+                  label="Start Date/Time: "
+                  value={calStartDate}
+                  onChange={(e, date) => setCalStartDate(date)}
+                  placeholder="Required"
+                />
+                <FormDateTime
+                  style={{ marginBottom: 15 }}
+                  label="End Date/Time: "
+                  value={calEndDate}
+                  onChange={(e, date) => setCalEndDate(date)}
+                  placeholder="Optional"
+                />
+                <FormInput
+                  label="Location: "
+                  multiline
+                  inputAccessoryViewID="messages-keyboard-toolbar"
+                  value={locationVal}
+                  onChangeText={text => setLocationVal(text)}
+                  placeholder="Optional"
+                />
+              </FormExpander>
+              <FormTextArea
+                inputAccessoryViewID="messages-keyboard-toolbar"
+                placeholder="Write message details here"
+                value={detailsVal}
+                onChangeText={text => setDetailsVal(text)}
+              />
+            </KeyboardAwareScrollView>
+            <KeyboardToolbar
+              nativeID="messages-keyboard-toolbar"
+              functions={["camera", "gallery", "documents"]}
+            />
+          </>
+        )
+      }
+    >
+      <MessagesEntry>
+        <Hero>
+          <ImageTint
+            colors={["rgba(0, 0, 0, 0.3)", "rgba(0, 0, 0, 1)"]}
+          ></ImageTint>
+          <ToolsRow>
+            <ToolButton
+              onPress={() => navigation.navigate("Messages")}
+              style={{ marginRight: "auto" }}
+            >
+              <SimpleLineIcons
+                name="arrow-left"
+                size={25}
+                color={theme.colorWhite}
+              />
+            </ToolButton>
+            <ToolButton
+              onPress={async () => {
+                setBsMode("Calendar");
+                const {
+                  status
+                } = await Calendar.requestCalendarPermissionsAsync();
+
+                if (status === "granted") {
+                  requestAnimationFrame(() => bsRef.current.snapTo(0));
+                }
+              }}
+            >
+              <SimpleLineIcons
+                name="calendar"
+                size={25}
+                color={theme.colorWhite}
+              />
+            </ToolButton>
+            {identity.status === "teacher" && (
+              <>
+                <ToolButton
+                  style={{ marginLeft: 25 }}
+                  onPress={() => {
+                    setBsMode("Edit");
+                    requestAnimationFrame(() => bsRef.current.snapTo(0));
+                  }}
+                >
+                  <SimpleLineIcons
+                    name="note"
+                    size={25}
+                    color={theme.colorWhite}
+                  />
+                </ToolButton>
+                <ToolButton style={{ marginLeft: 20 }}>
+                  <SimpleLineIcons
+                    name="trash"
+                    size={25}
+                    color={theme.colorWhite}
+                  />
+                </ToolButton>
+              </>
+            )}
+          </ToolsRow>
+          <MessageBadgeRow>
+            <MessageTypeBadge type={type}>{type}</MessageTypeBadge>
+          </MessageBadgeRow>
+          <HeroTitle>{title}</HeroTitle>
+          <OtherInfoRow>
+            <PublisherImage source={{ uri: teachers.get(publisher).picture }} />
+            <OtherInfoContent>
+              <PublisherText>
+                {teachers.get(publisher).referredName}
+              </PublisherText>
+              <DateText>
+                Posted {formatDistanceToNow(new Date(createdDate))} ago
+              </DateText>
+            </OtherInfoContent>
+          </OtherInfoRow>
+        </Hero>
+        <MainContent>
+          {responseAlertPresent ? (
+            <AccentedText style={{ marginBottom: 40 }}>
+              <FontAwesome
+                name="exclamation"
+                size={15}
+                color={theme.colorAccent}
+              />{" "}
+              {responseAlertString}
+            </AccentedText>
+          ) : null}
+          {target.dateType ? (
+            <TargetDateText>
+              <AccentedText>
+                {target.dateType === "Occurence" ? "Happening on" : "Due on"}:{" "}
+              </AccentedText>
+              <RegText>
+                {format(new Date(target.startDate), "do LLLL yyyy, K:mma")}
+                {target.endDate
+                  ? ` to ${format(
+                      new Date(target.endDate),
+                      "do LLLL yyyy, K:mma"
+                    )}`
+                  : null}
+              </RegText>
+            </TargetDateText>
+          ) : null}
+          {target.location ? (
+            <Anchor
+              style={{ marginBottom: 20 }}
+              href={
+                Platform.OS === "ios"
+                  ? `https://maps.apple.com/maps?address=${target.location
+                      .split(" ")
+                      .join("+")}`
+                  : `https://maps.google.com/maps?address=${target.location
+                      .split(" ")
+                      .join("+")}`
+              }
+            >
+              {target.location}
+            </Anchor>
+          ) : null}
+          <RegText>
+            It is a long established fact that a reader will be distracted by
+            the readable content of a page when looking at its layout. The point
+            of using Lorem Ipsum is that it has a more-or-less normal
+            distribution of letters, as opposed to using 'Content here, content
+            here', making it look like readable English.
+            {"\n"}
+            {"\n"}
+            Many desktop publishing packages and web page editors now use Lorem
+            Ipsum as their default model text, and a search for 'lorem ipsum'
+            will uncover many web sites still in their infancy. Various versions
+            have evolved over the years, sometimes by accident, sometimes on
+            purpose (injected humour and the like).
+          </RegText>
+          {responseButtonPresent ? (
+            <ResponseButton
+              style={{ marginTop: 60 }}
+              disabled={response.type ? false : true}
+              responseButtonStatus={responseButtonStatus}
+            >
+              <ResponseButtonLabel>
+                {responseButtonLabelString}
+              </ResponseButtonLabel>
+            </ResponseButton>
+          ) : null}
+          {responseListPresent &&
+            (() => {
+              const responseArr = Object.entries(response.responded).sort(
+                (a, b) => {
+                  if (a[1] && !b[1]) {
+                    return -1;
+                  } else if (!a[1] && b[1]) {
+                    return 1;
+                  } else if (a[1] && b[1]) {
+                    if (a[1] === "positive" && !(b[1] === "positive")) {
                       return -1;
-                    } else if (!a[1] && b[1]) {
+                    } else if (!(a[1] === "positive") && b[1] === "positive") {
                       return 1;
-                    } else if (a[1] && b[1]) {
-                      if (a[1] === "positive" && !(b[1] === "positive")) {
-                        return -1;
-                      } else if (
-                        !(a[1] === "positive") &&
-                        b[1] === "positive"
-                      ) {
-                        return 1;
-                      } else {
-                        return 0;
-                      }
                     } else {
                       return 0;
                     }
+                  } else {
+                    return 0;
                   }
-                );
+                }
+              );
 
-                return (
-                  <>
-                    <AccentedText style={{ marginVertical: 20 }}>
-                      Response {responseArr.filter(d => d[1]).length}/
-                      {responseArr.length}:{" "}
-                    </AccentedText>
-                    <ResponseList>
-                      {responseArr.map(d => {
-                        const parentsArr = parents.get(d[0]).parents;
-                        const childrenArr = parents
-                          .get(d[0])
-                          .children.map(id => children.get(id));
+              return (
+                <>
+                  <AccentedText style={{ marginVertical: 20 }}>
+                    Response {responseArr.filter(d => d[1]).length}/
+                    {responseArr.length}:{" "}
+                  </AccentedText>
+                  <ResponseList>
+                    {responseArr.map(d => {
+                      const parentsArr = parents.get(d[0]).parents;
+                      const childrenArr = parents
+                        .get(d[0])
+                        .children.map(id => children.get(id));
 
-                        return (
-                          <ResponseListItem key={d[0]} status={d[1]}>
-                            <ParentsRow>
+                      return (
+                        <ResponseListItem key={d[0]} status={d[1]}>
+                          <ParentsRow>
+                            <ResponseListImage
+                              source={{ uri: parentsArr[0].picture }}
+                            />
+                            {parentsArr.length > 1 && (
                               <ResponseListImage
-                                source={{ uri: parentsArr[0].picture }}
+                                source={{ uri: parentsArr[1].picture }}
                               />
-                              {parentsArr.length > 1 && (
+                            )}
+                            <RegText>{parentsArr[0].referredName}</RegText>
+                            <RegText>
+                              {parentsArr.length > 1 &&
+                                ` and ${parentsArr[1].referredName}`}
+                            </RegText>
+                            <TempText status={d[1]}>
+                              {" "}
+                              {d[1] === "positive"
+                                ? "✓"
+                                : d[1] === "negative"
+                                ? "✗"
+                                : null}
+                            </TempText>
+                          </ParentsRow>
+                          {childrenArr.map((child, idx) => {
+                            return (
+                              <ChildrenRow key={child.name}>
+                                <Thread first={idx === 0} />
                                 <ResponseListImage
-                                  source={{ uri: parentsArr[1].picture }}
+                                  source={require("../../assets/images/child-profile-stock.jpg")}
                                 />
-                              )}
-                              <RegText>{parentsArr[0].referredName}</RegText>
-                              <RegText>
-                                {parentsArr.length > 1 &&
-                                  ` and ${parentsArr[1].referredName}`}
-                              </RegText>
-                              <TempText status={d[1]}>
-                                {" "}
-                                {d[1] === "positive"
-                                  ? "✓"
-                                  : d[1] === "negative"
-                                  ? "✗"
-                                  : null}
-                              </TempText>
-                            </ParentsRow>
-                            {childrenArr.map((child, idx) => {
-                              return (
-                                <ChildrenRow key={child.name}>
-                                  <Thread first={idx === 0} />
-                                  <ResponseListImage
-                                    source={require("../../assets/images/child-profile-stock.jpg")}
-                                  />
-                                  <RegText>{child.referredName}</RegText>
-                                </ChildrenRow>
-                              );
-                            })}
-                          </ResponseListItem>
-                        );
-                      })}
-                    </ResponseList>
-                  </>
-                );
-              })()}
-          </MainContent>
-        </MessagesEntry>
-      </Overlay>
-      <FormBottomSheet
-        onCancel={() => requestAnimationFrame(() => bsRef.current.snapTo(1))}
-        submitLabel="Add"
-        onSubmit={addEventToCalendar}
-        ref={bsRef}
-        snapPoints={["90%", "0%"]}
-        initialSnap={1}
-        callbackNode={bsAnimNode.current}
-      >
-        <BsContentSectionTitle>Add To Calendar</BsContentSectionTitle>
-        <StyledFormInput
-          label="Title: "
-          multiline
-          value={titleVal}
-          onChangeText={text => setTitleVal(text)}
-        />
-        {target.dateType ? (
-          <TargetDateText style={{ marginBottom: 15 }}>
-            <AccentedText>
-              {target.dateType === "occurence" ? "Happening on" : "Due on"}:{" "}
-            </AccentedText>
-            <RegText>
-              {format(new Date(target.startDate), "do LLLL yyyy, K:mma")}
-              {target.endDate
-                ? ` to ${format(
-                    new Date(target.endDate),
-                    "do LLLL yyyy, K:mma"
-                  )}`
-                : null}
-            </RegText>
-          </TargetDateText>
-        ) : null}
-        {target.location ? (
-          <LocationText style={{ marginBottom: 15 }}>
-            <AccentedText>Location: </AccentedText>
-            <RegText>{target.location}</RegText>
-          </LocationText>
-        ) : null}
-        <FormExpander
-          style={{ marginBottom: 15 }}
-          label="Alert"
-          onExpandSideEffect={() => setAlertVal("At time of event")}
-        >
-          <StyledFormSelection
-            options={[
-              "At time of event",
-              "30 minutes before",
-              "1 hour before",
-              "2 hours before",
-              "1 day before",
-              "2 days before"
-            ]}
-            value={alertVal}
-            setValue={selected => setAlertVal(selected)}
-          />
-        </FormExpander>
-        <FormTextArea
-          placeholder="Write notes for calendar entry here"
-          value={notesVal}
-          onChangeText={text => setNotesVal(text)}
-        />
-      </FormBottomSheet>
-    </ScreenWrapper>
+                                <RegText>{child.referredName}</RegText>
+                              </ChildrenRow>
+                            );
+                          })}
+                        </ResponseListItem>
+                      );
+                    })}
+                  </ResponseList>
+                </>
+              );
+            })()}
+        </MainContent>
+      </MessagesEntry>
+    </WithBsView>
   );
 };
 
