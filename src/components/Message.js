@@ -77,10 +77,10 @@ const MessageComp = ({ onPress, datum, ...others }) => {
       responseAlertPresent = false;
       responseAlertString = "";
     } else {
-      if (response.type === "acknowledgement") {
+      if (response.type === "Acknowledgement") {
         responseAlertPresent = true;
         responseAlertString = "Acknowledgement Required";
-      } else if (response.type === "consent") {
+      } else if (response.type === "Consent") {
         responseAlertPresent = true;
         responseAlertString = "Consent Required";
       } else {

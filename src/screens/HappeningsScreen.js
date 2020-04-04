@@ -127,7 +127,7 @@ const HappeningsScreen = ({ navigation }) => {
         />
         <ImageTint />
         <HeroContent>
-          <HeroTitle>Happenings</HeroTitle>
+          <HeroTitle>Activities</HeroTitle>
           <Tools>
             <SearchBarWrapper>
               <SearchBar placeholder="Search" placeholderTextColor="#bfbfbf" />
