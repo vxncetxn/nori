@@ -1,12 +1,13 @@
-#Nori Checklist
+# Nori Checklist
 
-###Legend
+### Legend
+
 ✅ - Completed  
 🚧 - WIP  
 ❌ - Will not implement  
 ❓ - Unknown
 
-###Announcements
+### Announcements
 
 1. Cards (Grid UI and GET ALL /announcement) ✅
 2. Entry (Entry UI and GET ALL /announcement) ✅
@@ -19,7 +20,7 @@
 9. Uploads thumbnail(for images, videos and documents)
 10. Push Notifications
 
-###Activities
+### Activities
 
 1. Cards (Grid UI and GET ALL /activity) 🚧
 2. Entry (Entry UI and GET ALL /activity) 🚧
@@ -31,15 +32,15 @@
 8. Uploads thumbnail(for images and videos)
 9. Push Notifications
 
-###Portfolio
+### Portfolio
 
 1. All features ❓ (Check with Yanbo)
 
-###Chat
+### Chat
 
 1. All features ❌ (De-prioritized - complex and not enough time)
 
-###Me
+### Me
 
 1. My Profile (Profile UI)
 2. Edit My Profile (? UI)
@@ -51,7 +52,7 @@
 8. Help (FAQ, Contact Us, T&Cs, Licenses) ❌ (De-prioritized - content/function-heavy, not very important to app core functionality and not enough time)
 9. Logout
 
-###Additional features based on latest feedback
+### Additional features based on latest feedback
 
 1. Center Log ❌ (Functionality not related to parent-teacher communication)
 2. Attendance ❌ (De-prioritized - not enough time at this moment to add a whole new functionality requiring its own tab, but good to classify as Future Work)
